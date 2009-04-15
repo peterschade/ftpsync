@@ -1,0 +1,13 @@
+
+General
+=======
+
+ * config file support
+   This is mportant to avoid putting ftp passwords in the process list!
+
+
+Portability
+===========
+
+ * Support at least DOS based interrupt controller UIs ;-))
+
