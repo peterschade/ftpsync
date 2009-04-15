@@ -53,7 +53,7 @@ my $configfile=$ENV{"HOME"}."/.ftpsync";
 # basics
 my $localdir="";
 my $remoteURL="";
-my $syncdirection="put";
+my $syncdirection="";
 my $ftpuser="ftp";
 my $ftppasswd="anonymous";
 my $ftpserver="localhost";
@@ -117,24 +117,36 @@ for $curopt (@cfgfoptions, @cloptions) {
   elsif ($curopt =~ /^ftp:\/\/(([^@\/\\\:]+)(:([^@\/\\\:]+))?@)?([a-zA-Z01-9\.]+)\/(.*)/) {
     $remoteURL = $curopt;
     parseRemoteURL();
-    if ($localdir eq "") { $syncdirection="get"; }
+    if ( $syncdirection eq "" )
+    { $syncdirection="get"; }
   }
   elsif ($curopt =~ /^[a-z]+=.+/) {
     my ($fname, $fvalue) = split /=/, $curopt, 2;
     if    ($fname eq "cfg")       { next; }
-    elsif ($fname eq "ftpdir")    { $ftpdir     =$fvalue; 
+    elsif ($fname eq "ftpdir")    { $ftpdir     =$fvalue;
                                     if ($ftpdir ne "/") { $ftpdir=~s/\/$//; }
+                                    if ( $syncdirection eq "" ) { $syncdirection="get"; }
                                   }
-    elsif ($fname =~ m/ftppass(w(or)?d)?/i) { $ftppasswd=$fvalue; }
-    elsif ($fname eq "ftpserver") { $ftpserver  =$fvalue; }
-    elsif ($fname eq "ftpuser")   { $ftpuser    =$fvalue; }
-    elsif ($fname eq "localdir")  { $localdir   =$fvalue; $localdir=~s/\/$//; }
+    elsif ($fname =~ m/ftppass(w(or)?d)?/i)
+                                  { $ftppasswd=$fvalue;
+                                    if ( $syncdirection eq "" ) { $syncdirection="get"; }
+                                  }
+    elsif ($fname eq "ftpserver") { $ftpserver  =$fvalue;
+                                    if ( $syncdirection eq "" ) { $syncdirection="get"; }
+                                  }
+    elsif ($fname eq "ftpuser")   { $ftpuser    =$fvalue;
+                                    if ( $syncdirection eq "" ) { $syncdirection="get"; }
+                                  }
+    elsif ($fname eq "localdir")  { $localdir   =$fvalue; $localdir=~s/\/$//; 
+                                    if ( $syncdirection eq "" ) { $syncdirection="put"; }
+                                  }
     elsif ($fname eq "timeout")   { if ($fvalue>0) { $ftptimeout =$fvalue; } }
   }  
   else {
     if ($localdir eq "") {
       $localdir = $curopt;
-      if ($remoteURL eq "") { $syncdirection="put"; }
+      if ( $syncdirection eq "" )
+      { $syncdirection="put"; }
     } else {  
       print "ERROR: Unknown parameter: \"".$curopt."\"\n"; $returncode+=1 
     }
@@ -584,7 +596,7 @@ sub parseRemoteURL() {
 
 sub print_syntax() {
   print "\n";
-  print "FTPSync.pl 1.22 (2003-03-24)\n";
+  print "FTPSync.pl 1.26 (2004-03-31)\n";
   print "\n";
   print " ftpsync [ options ] [ localdir remoteURL ]\n";
   print " ftpsync [ options ] [ remoteURL localdir ]\n";

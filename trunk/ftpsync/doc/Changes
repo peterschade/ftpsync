@@ -2,8 +2,8 @@
 1.25 => 1.26 (2004-03-31)
 =========================
 
- * direction detection now smarter and less dangerous
- 
+ * fixed "dangerous" algorithm of synchronization direction
+
 
 1.24 => 1.25 (2004-03-20)
 =========================
@@ -18,6 +18,7 @@
    spaces, so code is readable independent of tab settings
  * enabled handling of ftpdir /
  * handling of relative ftpdir corrected
+
 
 1.23 => 1.24 (2003-10-11)
 =========================
