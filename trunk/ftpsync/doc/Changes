@@ -1,8 +1,19 @@
 
+1.27 => 1.28 (2006-03-12)
+=========================
+
+ By Elias Bröms http://www.eliasit.se/
+
+ * corrected parse of ftp://user:passwd@host/ URLs to accept '-' in hostnames.
+ * changed connection mode to passive (PASV).
+ * lowered ftp timeout from 120 to 20 seconds.
+
+
 1.26 => 1.27 (2004-08-23)
 =========================
 
- * Proposed and partially provided by Samuel Marshall <sam@leafdigital.com>
+ (mostly) by Samuel Marshall <sam@leafdigital.com>
+
  * enhanced timezone handling, should be perfect now
  * new option -c, like -i but then asks interactively to let do it
  * if FTP user/password are set to ?, they are asked for interactively
@@ -48,7 +59,7 @@
 1.21 => 1.22 (2003-03-24)
 =========================
 
- * Now cuts of / at directory spec's end, to avoid pwd() being different 
+ * Now cuts off / at directory spec's end, to avoid pwd() being different 
    from target of cwd() (which lead to unneccesarry abortions)
    
 

@@ -97,7 +97,7 @@ if ($configfile ne "") {
 } # else { print "No config file to read.\n"; } # For major problem debugging
 
 # Parse Options/Parameters
-print "Parsing all options.\n"; # For major problem debugging
+#print "Parsing all options.\n"; # For major problem debugging
 my $noofopts=0;
 for $curopt (@cfgfoptions, @cloptions) {
   if ($curopt =~ /^-[a-zA-Z]/) {
@@ -116,7 +116,7 @@ for $curopt (@cfgfoptions, @cloptions) {
       else  { print "ERROR: Unknown option: \"-".$curoptchar."\"\n"; $returncode+=1; }
     }
   }
-  elsif ($curopt =~ /^ftp:\/\/(([^@\/\\\:]+)(:([^@\/\\\:]+))?@)?([a-zA-Z01-9\.]+)\/(.*)/) {
+  elsif ($curopt =~ /^ftp:\/\/(([^@\/\\\:]+)(:([^@\/\\\:]+))?@)?([a-zA-Z01-9\.\-]+)\/(.*)/) {
     $remoteURL = $curopt;
     parseRemoteURL();
     if ( $syncdirection eq "" )
@@ -176,7 +176,7 @@ if ($returncode > 0) { die "Aborting due to missing or wrong options! Call ftpsy
 
 if ($dodebug) { print "\nFind out if ftp server is online & accessible.\n"; }
 my $doftpdebug=($doverbose > 2);
-my $ftpc = Net::FTP->new($ftpserver,Debug=>$doftpdebug,Timeout=>$ftptimeout) || die "Could not connect to $ftpserver\n";
+my $ftpc = Net::FTP->new($ftpserver,Debug=>$doftpdebug,Timeout=>$ftptimeout,Passive=>1) || die "Could not connect to $ftpserver\n";
 if ($dodebug) { print "Logging in as $ftpuser with password $ftppasswd.\n" }
 $ftpc->login($ftpuser,$ftppasswd) || die "Could not login to $ftpserver as $ftpuser\n";
 my $ftpdefdir=$ftpc->pwd();
@@ -607,7 +607,7 @@ sub listremotedirs() {
   }  
 }
 sub parseRemoteURL() {
-  if ($remoteURL =~ /^ftp:\/\/(([^@\/\\\:]+)(:([^@\/\\\:]+))?@)?([a-zA-Z01-9\.]+)\/(.*)/) {
+  if ($remoteURL =~ /^ftp:\/\/(([^@\/\\\:]+)(:([^@\/\\\:]+))?@)?([a-zA-Z01-9\.\-]+)\/(.*)/) {
     #print "DEBUG: parsing ".$remoteURL."\n";
     #print "match 1 = ".$1."\n";
     #print "match 2 = ".$2."\n";

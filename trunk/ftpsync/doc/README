@@ -10,6 +10,7 @@ Contents:
 - Bug reports, Contact
 - License
 - Updates
+- Thanks
 
 
 Overview:
@@ -50,7 +51,10 @@ Requirements / Restrictions:
   IMHO parts of the basic perl package.
 
 - Net::FTP
-  Part of the perl-libnet package.
+  Part of the libnet-perl package.
+  
+- File::Listing
+  Part of the libwww-perl package.
   
 - UNIX like operating systems on local system
   Porting to DOS based systems should be easily done by changing the 
@@ -109,3 +113,18 @@ Updates
 The software and updates should be available from 
 http://ftpsync.sourceforge.net/
 http://www.ibcl.at/ossw/FTPSync
+
+
+Thanks
+------
+
+Thanks to all who have provided comments and enhancements.
+
+Namely (in order of versions affected):
+
+- Michiel Steltman <Msteltman@disway.nl> (provided 1.24)
+
+- Samuel Marshall <sam@leafdigital.com> (provided most of 1.27)
+
+- Elias Bröms http://www.eliasit.se/ (provided 1.28)
+
