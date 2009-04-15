@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# ftpsync.pl
+# $Id$
 #
 # See attached README file for any details, or call
 # ftpsync.pl -h
@@ -127,12 +127,14 @@ for $curopt (@cfgfoptions, @cloptions) {
     }
   }
   elsif ($curopt =~ /^ftp:\/\/(([^@\/\\\:]+)(:([^@\/\\\:]+))?@)?([a-zA-Z01-9\.\-]+)\/(.*)/) {
+    $noofopts++;
     $remoteURL = $curopt;
     parseRemoteURL();
     if ( $syncdirection eq "" )
     { $syncdirection="get"; }
   }
   elsif ($curopt =~ /^[a-z]+=.+/) {
+    $noofopts++;
     my ($fname, $fvalue) = split /=/, $curopt, 2;
     if    ($fname eq "cfg")       { next; }
     elsif ($fname eq "ftpdir")    { $ftpdir     =$fvalue;
@@ -157,6 +159,7 @@ for $curopt (@cfgfoptions, @cloptions) {
   }
   else {
     if ($localdir eq "") {
+      $noofopts++;
       $localdir = $curopt;
       if ( $syncdirection eq "" )
       { $syncdirection="put"; }
