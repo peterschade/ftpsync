@@ -9,6 +9,7 @@ Contents:
 - Requirements
 - Bug reports, Contact
 - License
+- Updates
 
 
 Overview:
@@ -77,6 +78,7 @@ License:
 
 FTPSync.pl is GNU/GPL software and eMail ware.
 
+
 FTPSync.pl as GNU/GPL software:
 -------------------------------
 
@@ -100,7 +102,16 @@ FTPSync.pl as eMail ware:
 -------------------------
 
 FTPSync.pl is also eMail-Ware, which means that the initial author 
-would like to get an eMail (to ftpsync@ibcl.at), 
+(Christoph Lechleitner) would like to get an eMail (to ftpsync@ibcl.at), 
 - if anyone uses the script on production level,
 - if anyone distributes or advertises it in any way,
 - if anyone starts to (try to) improve it.
+
+
+Updates
+-------
+
+The software and updates should be available from 
+http://ftpsync.sourceforge.net/
+http://www.ibcl.net/ossw/FTPSync
+http://www.ibcl.at/ossw/FTPSync

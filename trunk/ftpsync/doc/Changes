@@ -26,7 +26,17 @@ in Pascal for DOS, Win3x and OS/2, and in VisualBasic for Win95b.
    correctly, i.e. they are ignored correctly ;-))
  
 
-1.10 => 1.x
+1.10 => 1.11
+============
+
+ * Some optical corrections concerning output
+ 
+ * Files are now automatically re-transferred until the size on both ends 
+   matches
+
+ * -? now corrrectly recognized 
+
+1.11 => 1.x
 ===========
 
 None so far ;-))
