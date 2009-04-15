@@ -1,6 +1,12 @@
 
-1.11 => 1.20
-============
+1.20 => 1.21 (2003-03-24)
+=========================
+
+ * version information in sourcefile and output of -h command
+ 
+
+1.11 => 1.20 (2003-03-22)
+=========================
 
  * generally, most foreseeable problems are beeing checked, in particular:
 
@@ -15,8 +21,8 @@
    All these errors (except the last one) leads to immediate abortion.
 
 
-1.10 => 1.11
-============
+1.10 => 1.11 (2002-05-10)
+=========================
 
  * Some optical corrections concerning output
  
@@ -26,8 +32,8 @@
  * -? now corrrectly recognized 
 
 
-1.00 => 1.10
-============
+1.00 => 1.10 (2001-10-28)
+=========================
 
  * config file support
    This is mportant to avoid putting ftp passwords in the process list!
@@ -44,8 +50,8 @@
 
 
 
-=> 1.00
-=======
+=> 1.00 (2001-10-26)
+====================
 
 * 1.0 created 2001-10-20 23:10 by Christoph Lechleitner <lech@ibcl.at>
 

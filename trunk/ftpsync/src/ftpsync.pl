@@ -93,11 +93,13 @@ if ($configfile ne "") {
 
 # Parse Options/Parameters
 #print "Parsing all options.\n"; # For major problem debugging
+my $noofopts=0;
 for $curopt (@cfgfoptions, @cloptions) {
   if ($curopt =~ /^-[a-zA-Z]/) {
     my $i;
     for ($i=1; $i<length($curopt); $i++) {
       my $curoptchar=substr($curopt,$i,1);
+      $noofopts++;
       if    ($curoptchar =~ /[dD]/)  { $dodebug=1; $doverbose=1; $doquiet=0; }
       elsif ($curoptchar =~ /[gG]/)  { $syncdirection="get"; }
       elsif ($curoptchar =~ /[hH?]/)  { print_syntax(); exit 0; }
@@ -131,6 +133,7 @@ for $curopt (@cfgfoptions, @cloptions) {
     }
   }      
 }
+if ($noofopts == 0) { print_syntax(); exit 0; }
 
 if ($dodebug) { print_options(); }
 # check options
@@ -512,7 +515,9 @@ sub parseRemoteURL() {
 
 
 sub print_syntax() {
-  print "\nThe correct syntax is:\n\n";
+  print "\n";
+  print "FTPSync.pl 1.21 (2003-03-24)\n";
+  print "\n";
   print " ftpsync [ options ] [ localdir remoteURL ]\n";
   print " ftpsync [ options ] [ remoteURL localdir ]\n";
   print " options = [-dgpqv] [ cfg|ftpuser|ftppasswd|ftpserver|ftpdir=value ... ] \n";
@@ -532,9 +537,10 @@ sub print_syntax() {
   print "   ftpdir=     defines the FTP directory, defaults to \".\" (/wo '\"') \n";
   print "   ftpuser=    defines the FTP user, defaults to \"ftp\".\n";
   print "   ftppasswd=  defines the FTP password, defaults to \"anonymous\".\n";
-  print "Later mentioned options and parameters overwrite those mentioned earlier.\n";
-  print "Command line options and parameters overwrite those in the config file.\n";
-  print "Don't use '\"', although mentioned default values might motiviate you to.\n";
+  print "\n";
+  print " Later mentioned options and parameters overwrite those mentioned earlier.\n";
+  print " Command line options and parameters overwrite those in the config file.\n";
+  print " Don't use '\"', although mentioned default values might motiviate you to.\n";
   print "\n";
 }
 
