@@ -69,6 +69,7 @@ my $infotext="";
 my $docheckfirst=0;
 my $ignoremask = undef;
 my $nodelete=0;
+my $followsymlinks=0;
 
 # Read command line options/parameters
 #print "Reading command line options.\n"; # For major problem debugging
@@ -112,6 +113,7 @@ for $curopt (@cfgfoptions, @cloptions) {
       elsif ($curoptchar =~ /[gG]/)  { $syncdirection="get"; }
       elsif ($curoptchar =~ /[hH?]/) { print_syntax(); exit 0; }
       elsif ($curoptchar =~ /[iI]/)  { $doinfoonly=1; }
+      elsif ($curoptchar =~ /[lL]/)  { $followsymlinks=1; }
       elsif ($curoptchar =~ /[pP]/)  { $syncdirection="put"; }
       elsif ($curoptchar =~ /[qQ]/)  { $dodebug=0; $doverbose=0; $doquiet=1; }
       elsif ($curoptchar =~ /[vV]/)  { $doverbose++; }
@@ -264,7 +266,7 @@ exit 0;
 #
 
 sub buildlocaltree() {
-  find (\&noticelocalfile, $localdir."/");
+  find ({wanted=>\&noticelocalfile,follow_fast => $followsymlinks }, $localdir."/"); 
   sub noticelocalfile {
     my $relfilename=substr($File::Find::name,$ldl);
     if (length($relfilename) == 0) { return; }
@@ -319,7 +321,7 @@ sub buildremotetree() {
   my @currecursedirs=();
   #$ftpc->ls() 
   #  or die $ftpc->message . "\nCannot ls remote dir " . $ftpc->pwd();
-  my @rfl = $ftpc->dir();
+  my @rfl = $ftpc->dir('-a');
   # or @rfl=(); # we have to survive empty remote directories !!!
   my $currf="";
   my $curyear = (gmtime(time))[5] + 1900;
@@ -657,7 +659,7 @@ sub parseRemoteURL() {
 
 sub print_syntax() {
   print "\n";
-  print "FTPSync.pl 1.31 (2006-07-29)\n";
+  print "FTPSync.pl 1.32 (2006-08-30)\n";
   print "\n";
   print " ftpsync [ options ] [ localdir remoteURL ]\n";
   print " ftpsync [ options ] [ remoteURL localdir ]\n";
@@ -671,8 +673,9 @@ sub print_syntax() {
   print "   -g | -G     forces sync direction to GET (remote to local)\n";
   print "   -h | -H     prints out this help text\n";
   print "   -i | -I     forces info mode, only telling what would be done\n";
-  print "   -p | -P     forces sync direction to PUT (local to remote)\n";
   print "   -n | -N     no deletion of obsolete files or directories\n";
+  print "   -l | -L     follow local symbolic links as if they were directories\n";
+  print "   -p | -P     forces sync direction to PUT (local to remote)\n";
   print "   -q | -Q     turnes quiet operation on\n";
   print "   -v | -V     turnes verbose output on\n";
   print "   cfg=        read parameters and options from file defined by value.\n";
