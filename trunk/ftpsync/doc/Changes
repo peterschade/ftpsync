@@ -1,4 +1,14 @@
 
+1.23 => 1.24 (2003-10-11)
+=========================
+
+ By Michiel Steltman <Msteltman@disway.nl>
+ 
+ * handle files with blanks etc in names
+ * clock offset remote-local to reduce unnecessary transfers
+ * error handling
+ 
+
 1.22 => 1.23 (2003-09-28)
 =========================
 
