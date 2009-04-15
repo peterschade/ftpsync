@@ -68,6 +68,7 @@ my $doinfoonly=0;
 my $infotext="";
 my $docheckfirst=0;
 my $ignoremask = undef;
+my $nodelete=0;
 
 # Read command line options/parameters
 #print "Reading command line options.\n"; # For major problem debugging
@@ -114,6 +115,7 @@ for $curopt (@cfgfoptions, @cloptions) {
       elsif ($curoptchar =~ /[pP]/)  { $syncdirection="put"; }
       elsif ($curoptchar =~ /[qQ]/)  { $dodebug=0; $doverbose=0; $doquiet=1; }
       elsif ($curoptchar =~ /[vV]/)  { $doverbose++; }
+      elsif ($curoptchar =~ /[nN]/)  { $nodelete=1; }
       else  { print "ERROR: Unknown option: \"-".$curoptchar."\"\n"; $returncode+=1; }
     }
   }
@@ -462,6 +464,7 @@ sub dosync()
         if ($doverbose)  { print $curlocaldir."\n"; }
         elsif (! $doquiet) { print "d"; }
         if ($ftpc->mkdir($curlocaldir) ne $curlocaldir) { die "Could not create remote subdirectory $curlocaldir\n"; }
+        $ftpc->quot('SITE', sprintf('CHMOD %04o %s', (lstat $curlocaldir)[2] & 07777, $curlocaldir));
       }
     }
     # copy files missing or too old at the target, synchronize timestamp _after_ copying
@@ -503,29 +506,33 @@ sub dosync()
       }
       my $newremotemdt=$ftpc->mdtm($curlocalfile)+$syncoff;
       utime ($newremotemdt, $newremotemdt, $curlocalfile);
+      $ftpc->quot('SITE', sprintf('CHMOD %04o %s', (lstat $curlocalfile)[2] & 07777, $curlocalfile));
     }
-    # delete files too much at the target
-    if    ($doinfoonly) { print "\nWould delete obsolete remote files.\n"; }
-    elsif (! $doquiet)  { print "\nDeleting obsolete remote files.\n"; }
-    my $curremotefile;
-    foreach $curremotefile (keys(%remotefiledates)) 
-    { if (not exists $localfiledates{$curremotefile})
-      { if ($doinfoonly) { print $curremotefile."\n"; next; }
-        if ($doverbose)  { print $curremotefile."\n"; }
-        elsif (! $doquiet) { print "r"; }
-        if ($ftpc->delete($curremotefile) ne 1) { die "Could not delete remote file $curremotefile\n"; }
+    if (! $nodelete)
+    {
+      # delete files too much at the target
+      if    ($doinfoonly) { print "\nWould delete obsolete remote files.\n"; }
+      elsif (! $doquiet)  { print "\nDeleting obsolete remote files.\n"; }
+      my $curremotefile;
+      foreach $curremotefile (keys(%remotefiledates)) 
+      { if (not exists $localfiledates{$curremotefile})
+        { if ($doinfoonly) { print $curremotefile."\n"; next; }
+          if ($doverbose)  { print $curremotefile."\n"; }
+          elsif (! $doquiet) { print "r"; }
+          if ($ftpc->delete($curremotefile) ne 1) { die "Could not delete remote file $curremotefile\n"; }
+        }
       }
-    }
-    # delete dirs too much at the target
-    if    ($doinfoonly) { print "\nWould delete obsolete remote directories.\n"; }
-    elsif (! $doquiet)  { print "\nDeleting obsolete remote directories.\n"; }
-    my $curremotedir;
-    foreach $curremotedir (sort { return length($b) <=> length($a); } keys(%remotedirs))
-    { if (! exists $localdirs{$curremotedir})
-      { if ($doinfoonly) { print $curremotedir."\n"; next; }
-        if ($doverbose)  { print $curremotedir."\n"; }
-        elsif (! $doquiet) { print "R"; }
-        if ($ftpc->rmdir($curremotedir) ne 1) { die "Could not remove remote subdirectory $curremotedir\n"; }
+      # delete dirs too much at the target
+      if    ($doinfoonly) { print "\nWould delete obsolete remote directories.\n"; }
+      elsif (! $doquiet)  { print "\nDeleting obsolete remote directories.\n"; }
+      my $curremotedir;
+      foreach $curremotedir (sort { return length($b) <=> length($a); } keys(%remotedirs))
+      { if (! exists $localdirs{$curremotedir})
+        { if ($doinfoonly) { print $curremotedir."\n"; next; }
+          if ($doverbose)  { print $curremotedir."\n"; }
+          elsif (! $doquiet) { print "R"; }
+          if ($ftpc->rmdir($curremotedir) ne 1) { die "Could not remove remote subdirectory $curremotedir\n"; }
+        }
       }
     }
   } else { # $syncdirection eq "GET"
@@ -582,28 +589,31 @@ sub dosync()
       my $newlocalmdt=$remotefiledates{$curremotefile};
       utime ($newlocalmdt, $newlocalmdt, $curremotefile);
     }
-    # delete files too much at the target
-    if    ($doinfoonly) { print "\nWould delete obsolete local files.\n"; }
-    elsif (! $doquiet)  { print "\nDeleting obsolete local files.\n"; }
-    my $curlocalfile;
-    foreach $curlocalfile (sort { return length($b) <=> length($a); } keys(%localfiledates)) 
-    { if (not exists $remotefiledates{$curlocalfile})
-      { if ($doinfoonly) { print $curlocalfile."\n"; next; }
-        if ($doverbose)  { print $curlocalfile."\n"; }
-        elsif (! $doquiet) { print "r"; }
-        if (unlink($curlocalfile) ne 1) { die "Could not remove local file $curlocalfile\n"; }
+    if (! $nodelete)
+    {
+      # delete files too much at the target
+      if    ($doinfoonly) { print "\nWould delete obsolete local files.\n"; }
+      elsif (! $doquiet)  { print "\nDeleting obsolete local files.\n"; }
+      my $curlocalfile;
+      foreach $curlocalfile (sort { return length($b) <=> length($a); } keys(%localfiledates)) 
+      { if (not exists $remotefiledates{$curlocalfile})
+        { if ($doinfoonly) { print $curlocalfile."\n"; next; }
+          if ($doverbose)  { print $curlocalfile."\n"; }
+          elsif (! $doquiet) { print "r"; }
+          if (unlink($curlocalfile) ne 1) { die "Could not remove local file $curlocalfile\n"; }
+        }
       }
-    }
-    # delete dirs too much at the target
-    if    ($doinfoonly) { print "\nWould delete obsolete local directories.\n"; }
-    elsif (! $doquiet)  { print "\nDeleting obsolete local directories.\n"; }
-    my $curlocaldir;
-    foreach $curlocaldir (keys(%localdirs))
-    { if (! exists $remotedirs{$curlocaldir})
-      { if ($doinfoonly) { print $curlocaldir."\n"; next; }
-        if ($doverbose)  { print $curlocaldir."\n"; }
-        elsif (! $doquiet) { print "d"; }
-        rmdir($curlocaldir) || die "Could not remove local subdirectory $curlocaldir\n";
+      # delete dirs too much at the target
+      if    ($doinfoonly) { print "\nWould delete obsolete local directories.\n"; }
+      elsif (! $doquiet)  { print "\nDeleting obsolete local directories.\n"; }
+      my $curlocaldir;
+      foreach $curlocaldir (keys(%localdirs))
+      { if (! exists $remotedirs{$curlocaldir})
+        { if ($doinfoonly) { print $curlocaldir."\n"; next; }
+          if ($doverbose)  { print $curlocaldir."\n"; }
+          elsif (! $doquiet) { print "d"; }
+          rmdir($curlocaldir) || die "Could not remove local subdirectory $curlocaldir\n";
+        }
       }
     }
   }
@@ -662,6 +672,7 @@ sub print_syntax() {
   print "   -h | -H     turns debugging on\n";
   print "   -i | -I     forces info mode, only telling what would be done\n";
   print "   -p | -P     forces sync direction to PUT (local to remote)\n";
+  print "   -n | -N     never delete any obsolete files or directories\n";
   print "   -q | -Q     turnes quiet operation on\n";
   print "   -v | -V     turnes verbose output on\n";
   print "   cfg=        read parameters and options from file defined by value.\n";

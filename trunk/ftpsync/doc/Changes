@@ -1,4 +1,14 @@
 
+1.29 => 1.2.30 (2006-07-23)
+===========================
+
+ Proposed by Nikla Therning <niklas@trillian.se>
+
+ * added no-delete option --nodel
+ * added ability to sync file access modi too, when PUTing
+ * version schema changed
+
+
 1.28 => 1.29 (2006-05-22)
 =========================
 
