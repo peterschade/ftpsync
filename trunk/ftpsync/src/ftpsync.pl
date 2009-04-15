@@ -73,6 +73,7 @@ my $nodelete=0;
 my $followsymlinks=0;
 my $doflat=0;
 my $notimestamping=0;
+my $notimestampcheck=0;
 
 # Read command line options/parameters
 #print "Reading command line options.\n"; # For major problem debugging
@@ -120,6 +121,7 @@ for $curopt (@cfgfoptions, @cloptions) {
       elsif ($curoptchar =~ /[lL]/)  { $followsymlinks=1; }
       elsif ($curoptchar =~ /[pP]/)  { $syncdirection="put"; }
       elsif ($curoptchar =~ /[qQ]/)  { $dodebug=0; $doverbose=0; $doquiet=1; }
+      elsif ($curoptchar =~ /[sS]/)  { $notimestampcheck=1; }
       elsif ($curoptchar =~ /[tT]/)  { $notimestamping=1; }
       elsif ($curoptchar =~ /[vV]/)  { $doverbose++; }
       elsif ($curoptchar =~ /[nN]/)  { $nodelete=1; }
@@ -531,7 +533,7 @@ sub dosync()
         elsif ($doverbose) { print $infotext; }
         elsif (! $doquiet) { print "n"; }
       }
-      elsif ($remotefiledates{$curlocalfile} < $localfiledates{$curlocalfile}) {
+      elsif ($notimestampcheck == 0 && $remotefiledates{$curlocalfile} < $localfiledates{$curlocalfile}) {
         $dorefresh=1;
         $infotext="Newer: ".$curlocalfile." (".$localfilesizes{$curlocalfile}." bytes, ".$localfiledates{$curlocalfile}." versus ".$remotefiledates{$curlocalfile}.")\n";
         if ($doinfoonly) { print $infotext; next; }
@@ -712,7 +714,7 @@ sub parseRemoteURL() {
 
 sub print_syntax() {
   print "\n";
-  print "FTPSync.pl 1.2.34 (2008-06-06)\n";
+  print "FTPSync.pl 1.3.00 (2009-04-15)\n";
   print "\n";
   print " ftpsync [ options ] [ localdir remoteURL ]\n";
   print " ftpsync [ options ] [ remoteURL localdir ]\n";
@@ -732,6 +734,7 @@ sub print_syntax() {
   print "   -p | -P     forces sync direction to PUT (local to remote)\n";
   print "   -q | -Q     turns quiet operation on\n";
   print "   -t | -T     turns timestamp setting for local files off\n"; # backward compatibility
+  print "   -s | -S     turns usage of timestamps to check for changed files off (only checks for changes in size)\n";
   print "   -v | -V     turnes verbose output on\n";
   print "   cfg=        read parameters and options from file defined by value.\n";
   print "   ftpserver=  defines the FTP server, defaults to \"localhost\".\n";
