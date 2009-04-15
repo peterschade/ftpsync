@@ -657,7 +657,7 @@ sub parseRemoteURL() {
 
 sub print_syntax() {
   print "\n";
-  print "FTPSync.pl 1.27 (2004-08-23)\n";
+  print "FTPSync.pl 1.31 (2006-07-29)\n";
   print "\n";
   print " ftpsync [ options ] [ localdir remoteURL ]\n";
   print " ftpsync [ options ] [ remoteURL localdir ]\n";
@@ -669,10 +669,10 @@ sub print_syntax() {
   print "   -c | -C     like -i, but then prompts whether to actually do work\n";
   print "   -d | -D     turns debug output (including verbose output) on\n";
   print "   -g | -G     forces sync direction to GET (remote to local)\n";
-  print "   -h | -H     turns debugging on\n";
+  print "   -h | -H     prints out this help text\n";
   print "   -i | -I     forces info mode, only telling what would be done\n";
   print "   -p | -P     forces sync direction to PUT (local to remote)\n";
-  print "   -n | -N     never delete any obsolete files or directories\n";
+  print "   -n | -N     no deletion of obsolete files or directories\n";
   print "   -q | -Q     turnes quiet operation on\n";
   print "   -v | -V     turnes verbose output on\n";
   print "   cfg=        read parameters and options from file defined by value.\n";

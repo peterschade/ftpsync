@@ -1,8 +1,15 @@
 
+1.2.30 => 1.2.31 (2006-07-29)
+=============================
+
+ * Output of -h/-H corrected, on hint 
+   by Ronnie T. Moore http://alwayswebhosting.com/
+
+
 1.29 => 1.2.30 (2006-07-23)
 ===========================
 
- Proposed by Nikla Therning <niklas@trillian.se>
+ Proposed by Nikla Therning http://therning.org/niklas
 
  * added no-delete option --nodel
  * added ability to sync file access modi too, when PUTing
