@@ -1,4 +1,15 @@
 
+1.2.33 => 1.2.34 (2008-06-06)
+=============================
+
+ * README enhanced concerinng grammar and style, 
+   by Wolfram Sieber <wolfram.r.sieber@gmail.com>
+
+ * Added Option to disable timestamping for transferred (local) files
+ * Added reconnect if conncection times out after local file reading
+   both by by Alexander Klein <a.klein@ageless.de>
+
+
 1.2.32 => 1.2.33 (2006-10-27)
 =============================
 

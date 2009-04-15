@@ -5,9 +5,9 @@ Contents:
 =========
 
 - Overview
-- Why use ftpsync.pl instead of mirror, sitecopy, ...?
-- Requirements/Restrictions
-- Bug reports, Contact
+- Why should I use ftpsync.pl instead of mirror, sitecopy, ...?
+- Requirements/restrictions
+- Bug reports, contact
 - License
 - Updates
 - Thanks
@@ -18,7 +18,7 @@ Overview:
 
 ftpsync.pl synchronizes a local directory tree and a remote FTP directory tree.
 
-It was initally written to automize web publishing, but might be useful for 
+Initially it was written to automate web publishing, but might be useful for
 some other purposes, like mirroring not-too-large public sites, data
 replication, and more.
 
@@ -28,23 +28,21 @@ Call "ftpsync.pl -h" to get a short parameter explanation.
 Why use ftpsync.pl instead of mirror, sitecopy, ...?
 ----------------------------------------------------
 
-Yes, there are similar projects, so some comments on them:
+Yes, there are similar projects, hence some comments on them:
 
-Compared to mirror, ftpsync.pl is capable of PUTing, not only GETing stuff
-(Don't blame me if mirror is able to PUT, I could'nt find a way).
+Compared to mirror, ftpsync.pl is capable of PUTting, not only GETting stuff.
+(Don't blame me if mirror is able to PUT, I couldn't find a way.)
 
-Compared to sitecopy, ftpsync.pl has no problems, if the remote site has been
-changed since its last run by other tools and activites. Unless network
-problems or bugs occur, ftpsync.pl does a reliable synchronization.
+Compared to sitecopy, if the remote site was changed by other tools and/or activites since the previous run of the synchronization tool, ftpsync.pl doesn't get a hard time. Unless network problems occur or bugs come into action, ftpsync.pl does a synchronizes reliably.
 
-Compared to both, ftpsync.pl is very lightweight ;-))
+Compared to both tools, ftpsync.pl is very lightweight. ;-))
 
 
 Requirements / Restrictions:
 ----------------------------
 
 - Perl 5.6+
-  ftpsync.pl was initially developed on  Perl 5.6.0-81 on SuSE Linux 7.2,
+  ftpsync.pl was initially developed on Perl 5.6.0-81 on SuSE Linux 7.2,
   older Perl 5.x version might work. Test reports welcome at ftpsync@ibcl.at!
 
 - File::Find, IO::Handle
@@ -57,14 +55,14 @@ Requirements / Restrictions:
   Part of the libwww-perl package.
   
 - UNIX like operating systems on local system
-  Porting to DOS based systems should be easily done by changing the 
+  Porting to DOS based systems should be easily done by changing the
   directory separator.
   
-- Perhaps, the script does not work with all FTP servers
-  It is beeing tested only against UNIX based FTP servers.
+- Perhaps, the script does not work with all FTP servers.
+  It is being tested only against UNIX based FTP servers.
 
 
-Bug-Reports, Contact:
+Bug-Reports, contact:
 ---------------------
 
 Besides ftpsync.sourceforge.net, ftpsync@ibcl.at is a good target for comments
@@ -100,7 +98,7 @@ See attached file COPYING.
 FTPSync.pl as eMail ware:
 -------------------------
 
-FTPSync.pl is also eMail-Ware, which means that the initial author 
+FTPSync.pl is also eMail ware, which means that the initial author
 (Christoph Lechleitner) would like to get an eMail (to ftpsync@ibcl.at), 
 - if anyone uses the script on production level,
 - if anyone distributes or advertises it in any way,
@@ -137,4 +135,11 @@ Namely (in order of versions affected):
 - Brian Drawert <brian@deadtide.com> (provided 1.2.32)
 
 - Jose A. Otero <gcervi@gmail.com> (proposed 1.2.33)
+
+- Wolfram Sieber <wolfram.r.sieber@gmail.com> (enhanced this README, 1.2.34)
+
+- Peter Bohn <PeterBohn@gmx.net> (proposed MD5 feature, refused)
+
+- Alexander Klein <a.klein@ageless.de> (-t feature, 1.2.34)
+
 
