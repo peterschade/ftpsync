@@ -1,12 +1,29 @@
 
-=> 1.00
-=======
+1.11 => 1.20
+============
 
-* 1.0 created 2001-10-20 23:10 by Christoph Lechleitner <lech@ibcl.at>
+ * generally, most foreseeable problems are beeing checked, in particular:
 
-Quite good for a 5 hour hack, isn't it?
-O.K., I have already written similar programs for local file systems
-in Pascal for DOS, Win3x and OS/2, and in VisualBasic for Win95b.
+   - unability to connect to FTP server
+   - unability to login into FTP server
+   - unability to change to local or remote base directory
+   - unability to change to remote subdirectory
+   - unability to create local or remote subdirectory
+   - unability to remove local or remote subdirectory
+   - unability to put or get a file within 3 trials
+   
+   All these errors (except the last one) leads to immediate abortion.
+
+
+1.10 => 1.11
+============
+
+ * Some optical corrections concerning output
+ 
+ * Files are now automatically re-transferred until the size on both ends 
+   matches
+
+ * -? now corrrectly recognized 
 
 
 1.00 => 1.10
@@ -24,21 +41,16 @@ in Pascal for DOS, Win3x and OS/2, and in VisualBasic for Win95b.
  
  * softlinks are now detected (locally and remote) and treated somewhat
    correctly, i.e. they are ignored correctly ;-))
- 
 
-1.10 => 1.11
-============
 
- * Some optical corrections concerning output
- 
- * Files are now automatically re-transferred until the size on both ends 
-   matches
 
- * -? now corrrectly recognized 
+=> 1.00
+=======
 
-1.11 => 1.x
-===========
+* 1.0 created 2001-10-20 23:10 by Christoph Lechleitner <lech@ibcl.at>
 
-None so far ;-))
+Quite good for a 5 hour hack, isn't it?
+O.K., I have already written similar programs for local file systems
+in Pascal for DOS, Win3x and OS/2, and in VisualBasic for Win95b.
 
-See TODO file for plans.
+

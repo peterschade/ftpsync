@@ -1,13 +1,2 @@
 
-General
-=======
-
- * Treating links correctly, if UNIX like systems are on both sides,
-   instead of ignoring them always
-
-
-Portability
-===========
-
- * Support at least DOS based interrupt controller UIs ;-))
-
+Nothing as of now.

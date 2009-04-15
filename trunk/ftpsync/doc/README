@@ -6,7 +6,7 @@ Contents:
 
 - Overview
 - Why use ftpsync.pl instead of mirror, sitecopy, ...?
-- Requirements
+- Requirements/Restrictions
 - Bug reports, Contact
 - License
 - Updates
@@ -39,12 +39,12 @@ problems or bugs occur, ftpsync.pl does a reliable synchronization.
 Compared to both, ftpsync.pl is very lightweight ;-))
 
 
-Requirements / Restrictions / Comments:
----------------------------------------
+Requirements / Restrictions:
+----------------------------
 
 - Perl 5.6+
   ftpsync.pl was initially developed on  Perl 5.6.0-81 on SuSE Linux 7.2,
-  older Perl 5,x version might work. Test reports welcome at ftpsync@ibcl.at!
+  older Perl 5.x version might work. Test reports welcome at ftpsync@ibcl.at!
 
 - File::Find, IO::Handle
   IMHO parts of the basic perl package.
@@ -53,17 +53,11 @@ Requirements / Restrictions / Comments:
   Part of the perl-libnet package.
   
 - UNIX like operating systems on local system
-  I know this is a heavy restriction, but it is on the todo list ;-))
-  For support of DOS based systems (like OS/2, Win*), the directory 
-  separator should be the only issue to address.
-  Don't ask my about weird systems like MacOS before X, Amiga, or even 
-  IBM's former cash cows OS/390 and OS/400.
+  Porting to DOS based systems should be easily done by changing the 
+  directory separator.
   
-- Perhaps, the script does not work with all FTP servers:
-  perhaps such working with DOS/Win* are problematic,
-  and, almost for sure, MacOS- and OS/xx0 are critical.
-  Use -i or even -vi, -di to make a "what-would-be-test" before using it
-  against weird, new or changed servers.
+- Perhaps, the script does not work with all FTP servers
+  It is beeing tested only against UNIX based FTP servers.
 
 
 Bug-Reports, Contact:
@@ -98,6 +92,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 See attached file COPYING.
 
+
 FTPSync.pl as eMail ware:
 -------------------------
 
@@ -113,5 +108,4 @@ Updates
 
 The software and updates should be available from 
 http://ftpsync.sourceforge.net/
-http://www.ibcl.net/ossw/FTPSync
 http://www.ibcl.at/ossw/FTPSync
