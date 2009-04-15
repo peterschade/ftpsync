@@ -32,9 +32,8 @@ xsync public_html root@cw01.ibcl.at:/var/www/htdocs/w3ibcl/ossw.ibcl.at/FTPSync
 ssh root@cw01.ibcl.at cpacls -R /var/www/htdocs/w3ibcl/ossw.ibcl.at /var/www/htdocs/w3ibcl/ossw.ibcl.at/FTPSync
 
 echo "Synching to sourceforge AKA http://ftpsync.sourceforge.net/"
-test -f tmp/.sfpw && cat tmp/.sfpw 
-xsync public_html ibcl@ftpsync.sourceforge.net:/home/groups/f/ft/ftpsync/htdocs/
-ssh ibcl@ftpsync.sourceforge.net chmod -R ugo+rx /home/groups/f/ft/ftpsync/htdocs/*
+xsync public_html ibcl,ftpsync@web.sourceforge.net:/home/groups/f/ft/ftpsync/htdocs/
+ssh -t ibcl,ftpsync@shell.sourceforge.net chmod -R ugo+rx /home/groups/f/ft/ftpsync/htdocs/*
 
 # rsync -avP -e ssh pub/ftpsync-1.2.34.tar.bz2 ibcl@frs.sourceforge.net:uploads/
 

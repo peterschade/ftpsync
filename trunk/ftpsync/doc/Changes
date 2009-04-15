@@ -1,12 +1,19 @@
 # $Id$
 
+1.3.00 => 1.3.01 (2009-04-15)
+=============================
+
+ * Moving subversion repository to sourceforge
+ 
+ * Documented the ignoremask feature in print_syntax()
+
+ * Extended detection of trailing / to ftp url parsing.
+   proposed by https://sourceforge.net/users/djdandman/
 
 1.2.34 => 1.3.00 (2009-04-15)
 =============================
 
- * Moved project to clazzes.org
-   and put everything under subversion control,
-   see https://www.clazzes.org/trac/ftpsync
+ * Put everything under subversion control
 
  * Fix to allow FTP URL and local directory to be the only command
    line options given

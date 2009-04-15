@@ -195,7 +195,8 @@ my $ftpc;
 connection();
 
 if (! $doquiet) { print "\nDetermine s offset.\n"; }
-if ($syncdirection eq "put") { clocksync($ftpc,"syncfile"); }
+if (($notimestamping+$notimestampcheck) lt 2 && $syncdirection eq "put") 
+{ clocksync($ftpc,"syncfile"); }
 
 #  local & remote tree vars
 #chdir $localdir;
@@ -707,14 +708,14 @@ sub parseRemoteURL() {
     if (length($4) > 0) { $ftppasswd=$4; }
     $ftpserver=$5;
     $ftpdir=$6;
-    #if ($ftpdir eq "") { $ftpdir="/"; }
+    if ($ftpdir ne "/") { $ftpdir=~s/\/$//; }
   }
 }
 
 
 sub print_syntax() {
   print "\n";
-  print "FTPSync.pl 1.3.00 (2009-04-15)\n";
+  print "FTPSync.pl 1.3.01pre (2009-04-15)\n";
   print "\n";
   print " ftpsync [ options ] [ localdir remoteURL ]\n";
   print " ftpsync [ options ] [ remoteURL localdir ]\n";
@@ -733,14 +734,15 @@ sub print_syntax() {
   print "   -l | -L     follow local symbolic links as if they were directories\n";
   print "   -p | -P     forces sync direction to PUT (local to remote)\n";
   print "   -q | -Q     turns quiet operation on\n";
+  print "   -s | -S     turns usage timestamps comparison (only checks for changes in size)\n";
   print "   -t | -T     turns timestamp setting for local files off\n"; # backward compatibility
-  print "   -s | -S     turns usage of timestamps to check for changed files off (only checks for changes in size)\n";
   print "   -v | -V     turnes verbose output on\n";
   print "   cfg=        read parameters and options from file defined by value.\n";
   print "   ftpserver=  defines the FTP server, defaults to \"localhost\".\n";
   print "   ftpdir=     defines the FTP directory, defaults to \".\" (/wo '\"') \n";
   print "   ftpuser=    defines the FTP user, defaults to \"ftp\".\n";
   print "   ftppasswd=  defines the FTP password, defaults to \"anonymous\".\n";
+  print "   ignoremask= defines a regexp to ignore certain files, like .svn"."\n";
   print "\n";
   print " Later mentioned options and parameters overwrite those mentioned earlier.\n";
   print " Command line options and parameters overwrite those in the config file.\n";
