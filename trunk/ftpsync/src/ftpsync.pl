@@ -715,7 +715,7 @@ sub parseRemoteURL() {
 
 sub print_syntax() {
   print "\n";
-  print "FTPSync.pl 1.3.01pre (2009-04-15)\n";
+  print "FTPSync.pl 1.3.01 (2009-04-15)\n";
   print "\n";
   print " ftpsync [ options ] [ localdir remoteURL ]\n";
   print " ftpsync [ options ] [ remoteURL localdir ]\n";
