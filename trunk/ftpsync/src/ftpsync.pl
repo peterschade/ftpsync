@@ -70,6 +70,7 @@ my $docheckfirst=0;
 my $ignoremask = undef;
 my $nodelete=0;
 my $followsymlinks=0;
+my $doflat=0;
 
 # Read command line options/parameters
 #print "Reading command line options.\n"; # For major problem debugging
@@ -109,7 +110,8 @@ for $curopt (@cfgfoptions, @cloptions) {
       my $curoptchar=substr($curopt,$i,1);
       $noofopts++;
       if    ($curoptchar =~ /[cC]/)  { $docheckfirst=1; }
-      elsif ($curoptchar =~ /[dD]/)  { $dodebug=1; $doverbose=1; $doquiet=0; }
+      elsif ($curoptchar =~ /[dD]/)  { $dodebug=1; $doverbose=3; $doquiet=0; }
+      elsif ($curoptchar =~ /[fF]/)  { $doflat=1; }
       elsif ($curoptchar =~ /[gG]/)  { $syncdirection="get"; }
       elsif ($curoptchar =~ /[hH?]/) { print_syntax(); exit 0; }
       elsif ($curoptchar =~ /[iI]/)  { $doinfoonly=1; }
@@ -266,7 +268,24 @@ exit 0;
 #
 
 sub buildlocaltree() {
-  find ({wanted=>\&noticelocalfile,follow_fast => $followsymlinks }, $localdir."/"); 
+  if ($doflat) {
+    chdir $localdir;
+    my @globbed=glob("{*,.*}");
+    foreach my $curglobbed (@globbed) {
+      next if (! -f $curglobbed);
+      my @curfilestat=lstat $curglobbed;
+      my $curfilesize=@curfilestat[7];
+      my $curfilemdt=@curfilestat[9];
+      if ($dodebug) { print "File: ".$curglobbed."\n"; 
+                      print "Modified ".$curfilemdt."\nSize ".$curfilesize." bytes\n"; }
+      elsif ($doverbose gt 1) { print "."; }
+      my $relfilename=$curglobbed;
+      $localfiledates{$relfilename}=$curfilemdt;
+      $localfilesizes{$relfilename}=$curfilesize;
+    }
+  } else {
+    find ({wanted=>\&noticelocalfile,follow_fast => $followsymlinks }, $localdir."/"); 
+  }
   sub noticelocalfile {
     my $relfilename=substr($File::Find::name,$ldl);
     if (length($relfilename) == 0) { return; }
@@ -279,7 +298,7 @@ sub buildlocaltree() {
       }
     if (-d $_) {
       if ($dodebug) { print "Directory: ".$File::Find::name."\n"; }
-      elsif (! $doquiet) { print ":"; }
+      elsif ($doverbose gt 1) { print ":"; }
       $localdirs{$relfilename}="$relfilename";
     } 
     elsif (-f $_) {
@@ -289,13 +308,13 @@ sub buildlocaltree() {
       my $curfilemdt=@curfilestat[9];
       if ($dodebug) { print "File: ".$File::Find::name."\n"; 
                       print "Modified ".$curfilemdt."\nSize ".$curfilesize." bytes\n"; }
-      elsif (! $doquiet) { print "."; }
+      elsif ($doverbose gt 1) { print "."; }
       $localfiledates{$relfilename}=$curfilemdt;
       $localfilesizes{$relfilename}=$curfilesize;
     } 
     elsif (-l $_) {
       if ($dodebug) { print "Link: ".$File::Find::name."\n"; }
-      elsif (! $doquiet) { print ","; }
+      elsif ($doverbose gt 1) { print ","; }
       $locallinks{$relfilename}="$relfilename";
     } else {
       #print "u ".$File::Find::name."\n";
@@ -355,13 +374,15 @@ sub buildremotetree() {
         if ($dodebug) { print "Link: ".$curnrl." -> ".$cfname."\n"; }
       }
       elsif ($cftype eq 'd') { 
-        my $curnewrsd;
-        if ($curremotesubdir eq "") { $curnewrsd = $cfname; }
-        else                        { $curnewrsd = $curremotesubdir."/".$cfname; }
-        $remotedirs{$curnewrsd}=$curnewrsd;
-        if ($dodebug) { print "Directory: ".$curnewrsd."\n"; }
-        elsif (! $doquiet) { print ":"; }
-        push @currecursedirs, $cfname;
+        if (!$doflat) { 
+          my $curnewrsd;
+          if ($curremotesubdir eq "") { $curnewrsd = $cfname; }
+          else                        { $curnewrsd = $curremotesubdir."/".$cfname; }
+          $remotedirs{$curnewrsd}=$curnewrsd;
+          if ($dodebug) { print "Directory: ".$curnewrsd."\n"; }
+          elsif ($doverbose gt 1) { print ":"; }
+          push @currecursedirs, $cfname;
+        }
       }
       elsif ($cftype eq 'f') {  #plain file
         my $curnewrf;
@@ -373,13 +394,14 @@ sub buildremotetree() {
         $remotefilesizes{$curnewrf}=$cfsize;
         if ($remotefilesizes{$curnewrf} lt 0) { die "Timeout detecting size of $curnewrf\n"; }
         if ($dodebug) { print "File: ".$curnewrf."\n"; }
-        elsif (! $doquiet) { print "."; }
+        elsif ($doverbose gt 1) { print "."; }
       }
       elsif (! $doquiet) { print "Unkown file: $curlsline\n"; }
     }
     elsif ($dodebug) { print "Ignoring.\n"; }
   }
   #recurse
+  #if ($doflat) { @currecursedirs=(); }
   my $currecurseddir;
   foreach $currecurseddir (@currecursedirs)
   { my $oldcurremotesubdir;
@@ -396,7 +418,7 @@ sub buildremotetree() {
       or die "Cannot cwd to  $curcwddir", $ftpc->message ;
     if ($ftpc->pwd() ne $curcwddir) { 
       die "Could not cwd to $curcwddir :" . $ftpc->message ; }
-    if (! $doquiet) { print "\n"; }
+    if ($doverbose gt 1) { print "\n"; }
     buildremotetree();
     $ftpc->cdup();
     $curremotesubdir = $oldcurremotesubdir;
@@ -659,17 +681,18 @@ sub parseRemoteURL() {
 
 sub print_syntax() {
   print "\n";
-  print "FTPSync.pl 1.32 (2006-08-30)\n";
+  print "FTPSync.pl 1.2.33 (2006-10-27)\n";
   print "\n";
   print " ftpsync [ options ] [ localdir remoteURL ]\n";
   print " ftpsync [ options ] [ remoteURL localdir ]\n";
-  print " options = [-dgpqv] [ cfg|ftpuser|ftppasswd|ftpserver|ftpdir=value ... ] \n";
+  print " options = [-dfgpqv] [ cfg|ftpuser|ftppasswd|ftpserver|ftpdir=value ... ] \n";
   print "   localdir    local directory, defaults to \".\".\n";
   print "   ftpURL      full FTP URL, scheme\n";
   print '               ftp://[ftpuser[:ftppasswd]@]ftpserver/ftpdir'."\n";
   print "               ftpdir is relative, so double / for absolute paths as well as /\n";
   print "   -c | -C     like -i, but then prompts whether to actually do work\n";
   print "   -d | -D     turns debug output (including verbose output) on\n";
+  print "   -f | -F     flat operation, no subdir recursion\n";
   print "   -g | -G     forces sync direction to GET (remote to local)\n";
   print "   -h | -H     prints out this help text\n";
   print "   -i | -I     forces info mode, only telling what would be done\n";

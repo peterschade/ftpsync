@@ -1,8 +1,17 @@
 
+1.2.32 => 1.2.33 (2006-10-27)
+=============================
+
+ Proposed by Jose A. Otero <gcervi@gmail.com>
+
+ * . and : from filetree building only printed when verbosity > 1
+ * New option -f (f for flat) to avoid subdir recursion
+
+
 1.2.31 => 1.2.32 (2006-08-30)
 =============================
 
- Proposed and mostly provided Brian Drawert <brian@deadtide.com>
+ Proposed and mostly provided by Brian Drawert <brian@deadtide.com>
 
  * Option -L to follow symbolic links on local side
  * Added '-a' to remote listing command to see hidden files+dirs
