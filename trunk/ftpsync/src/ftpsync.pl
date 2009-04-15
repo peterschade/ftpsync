@@ -62,6 +62,7 @@ my $dodebug=0;
 my $doquiet=0;
 my $doinfoonly=0;
 my $infotext="";
+my $ftptimeout=120;
 
 # Read command line options/parameters
 #print "Reading command line options.\n"; # For major problem debugging
@@ -120,9 +121,10 @@ for $curopt (@cfgfoptions, @cloptions) {
     if    ($fname eq "cfg")       { next; }
     elsif ($fname eq "ftpdir")    { $ftpdir   =$fvalue; $ftpdir=~s/\/$//; }
     elsif ($fname =~ m/ftppass(w(or)?d)?/i) { $ftppasswd=$fvalue; }
-    elsif ($fname eq "ftpserver") { $ftpserver=$fvalue; }
-    elsif ($fname eq "ftpuser")   { $ftpuser  =$fvalue; }
-    elsif ($fname eq "localdir")  { $localdir =$fvalue; $localdir=~s/\/$//; }
+    elsif ($fname eq "ftpserver") { $ftpserver  =$fvalue; }
+    elsif ($fname eq "ftpuser")   { $ftpuser    =$fvalue; }
+    elsif ($fname eq "localdir")  { $localdir   =$fvalue; $localdir=~s/\/$//; }
+    elsif ($fname eq "timeout")   { if ($fvalue>0) { $ftptimeout =$fvalue; } }
   }  
   else {
     if ($localdir eq "") {
@@ -162,7 +164,7 @@ buildlocaltree();
 # Build remote tree
 if (! $doquiet) { print "\nBuilding remote file tree.\n"; }
 my $doftpdebug=($doverbose > 2);
-my $ftpc = Net::FTP->new($ftpserver,Debug=>$doftpdebug) || die "Could not connect to $ftpserver\n";
+my $ftpc = Net::FTP->new($ftpserver,Debug=>$doftpdebug,Timeout=>$ftptimeout) || die "Could not connect to $ftpserver\n";
 if ($dodebug) { print "Logging in as $ftpuser with password $ftppasswd.\n" }
 $ftpc->login($ftpuser,$ftppasswd) || die "Could not login to $ftpserver as $ftpuser\n";
 #if ($dodebug) { print "Remote directory is now ".$ftpc->pwd()."\n"; }
