@@ -2,8 +2,8 @@
 General
 =======
 
- * config file support
-   This is mportant to avoid putting ftp passwords in the process list!
+ * Treating links correctly, if UNIX like systems are on both sides,
+   instead of ignoring them always
 
 
 Portability

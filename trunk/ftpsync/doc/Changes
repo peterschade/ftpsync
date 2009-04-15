@@ -2,15 +2,32 @@
 => 1.00
 =======
 
-1.0 created 2001-10-20 23:10 by Christoph Lechleitner <lech@ibcl.at>
+* 1.0 created 2001-10-20 23:10 by Christoph Lechleitner <lech@ibcl.at>
 
 Quite good for a 5 hour hack, isn't it?
 O.K., I have already written similar programs for local file systems
 in Pascal for DOS, Win3x and OS/2, and in VisualBasic for Win95b.
 
 
-1.00 => 1.01
+1.00 => 1.10
 ============
+
+ * config file support
+   This is mportant to avoid putting ftp passwords in the process list!
+
+ * much more informative standard and verbose/debug output, including kind
+   of a advance information
+   
+ * better FTP-URL parsing supporting such without user/password
+ 
+ * much better default values, e.g. ftp://ftp:anonymous@localhost/., ...
+ 
+ * softlinks are now detected (locally and remote) and treated somewhat
+   correctly, i.e. they are ignored correctly ;-))
+ 
+
+1.10 => 1.x
+===========
 
 None so far ;-))
 
