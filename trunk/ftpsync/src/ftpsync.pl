@@ -51,13 +51,13 @@ STDERR->autoflush(1);
 my $returncode=0;
 my $configfile=$ENV{"HOME"}."/.ftpsync";
 # basics
-my $localdir=".";
+my $localdir="";
 my $remoteURL="";
 my $syncdirection="put";
 my $ftpuser="ftp";
 my $ftppasswd="anonymous";
 my $ftpserver="localhost";
-my $ftpdir=".";
+my $ftpdir="";
 my $ftptimeout=120;
 my $syncoff=0;
 # verbosity
@@ -114,7 +114,7 @@ for $curopt (@cfgfoptions, @cloptions) {
       else  { print "ERROR: Unknown option: \"-".$curoptchar."\"\n"; $returncode+=1; }
     }
   }
-  elsif ($curopt =~ /^ftp:\/\/(([^@\/\\\:]+)(:([^@\/\\\:]+))?@)?([a-zA-Z01-9\.]+)\/(.+)/) {
+  elsif ($curopt =~ /^ftp:\/\/(([^@\/\\\:]+)(:([^@\/\\\:]+))?@)?([a-zA-Z01-9\.]+)\/(.*)/) {
     $remoteURL = $curopt;
     parseRemoteURL();
     if ($localdir eq "") { $syncdirection="get"; }
@@ -122,7 +122,9 @@ for $curopt (@cfgfoptions, @cloptions) {
   elsif ($curopt =~ /^[a-z]+=.+/) {
     my ($fname, $fvalue) = split /=/, $curopt, 2;
     if    ($fname eq "cfg")       { next; }
-    elsif ($fname eq "ftpdir")    { $ftpdir   =$fvalue; $ftpdir=~s/\/$//; }
+    elsif ($fname eq "ftpdir")    { $ftpdir     =$fvalue; 
+                                    if ($ftpdir ne "/") { $ftpdir=~s/\/$//; }
+                                  }
     elsif ($fname =~ m/ftppass(w(or)?d)?/i) { $ftppasswd=$fvalue; }
     elsif ($fname eq "ftpserver") { $ftpserver  =$fvalue; }
     elsif ($fname eq "ftpuser")   { $ftpuser    =$fvalue; }
@@ -160,17 +162,26 @@ my $doftpdebug=($doverbose > 2);
 my $ftpc = Net::FTP->new($ftpserver,Debug=>$doftpdebug,Timeout=>$ftptimeout) || die "Could not connect to $ftpserver\n";
 if ($dodebug) { print "Logging in as $ftpuser with password $ftppasswd.\n" }
 $ftpc->login($ftpuser,$ftppasswd) || die "Could not login to $ftpserver as $ftpuser\n";
-if ($dodebug) { print "Remote directory is now ".$ftpc->pwd()."\n"; }
+my $ftpdefdir=$ftpc->pwd();
+if ($dodebug) { print "Remote directory is now ".$ftpdefdir."\n"; }
+if ($ftpdir !~ /^\//) # insert remote login directory into relative ftpdir specification
+{ if ($ftpdefdir eq "/")
+  { $ftpdir = $ftpdefdir . $ftpdir; }
+  else
+  { $ftpdir = $ftpdefdir . "/" . $ftpdir; }
+  if (!$doquiet) 
+  { print "Absolute remote directory is $ftpdir\n"; }
+}
 if ($dodebug) { print "Changing to remote directory $ftpdir.\n" }
 $ftpc->binary()
     or die "Cannot set binary mode ", $ftpc->message;
 $ftpc->cwd($ftpdir)
-    or die "Cannot cwd to $ftpdir", $ftpc->message;
+    or die "Cannot cwd to $ftpdir ", $ftpc->message;
 if ($ftpc->pwd() ne $ftpdir) { die "Could not change to remote base directory $ftpdir\n"; }
 if ($dodebug) { print "Remote directory is now ".$ftpc->pwd()."\n"; }
 
-if (! $doquiet) { print "\nDetermine clocks offset.\n"; }
-clocksync($ftpc,"syncfile");
+if (! $doquiet) { print "\nDetermine s offset.\n"; }
+if ($syncdirection eq "put") { clocksync($ftpc,"syncfile"); }
 
 #  local & remote tree vars 
 #chdir $localdir;
@@ -418,12 +429,10 @@ sub buildlocaltree() {
 
 sub buildremotetree() {
   my @currecursedirs=();
-  #my @rfl=$ftpc->ls();
+  #$ftpc->ls() 
+  #  or die $ftpc->message . "\nCannot ls remote dir " . $ftpc->pwd();
   my @rfl = $ftpc->dir();
-  if ( ! @rfl ) {
-     my $msg = $ftpc->message ;
-     die "Cannot list remote dir " . $ftpc->pwd(), $msg;
-  }
+  # or @rfl=(); # we have to survive empty remote directories !!!
   my $currf="";
   my $curyear = (gmtime(time))[5] + 1900;
   my %monthtonr=(); 
@@ -439,30 +448,30 @@ sub buildremotetree() {
       if ($cfname eq "..") { next; }
       if (substr($cftype,0,1) eq 'l') {  # link, rest of string = linkto
         my $curnrl;
-	if ($curremotesubdir eq "") { $curnrl = $cfname; }
-	else                        { $curnrl = $curremotesubdir."/".$cfname; }
-	$remotelinks{$curnrl}=$cfname;
-	if ($dodebug) { print "Link: ".$curnrl." -> ".$cfname."\n"; }
+        if ($curremotesubdir eq "") { $curnrl = $cfname; }
+        else                        { $curnrl = $curremotesubdir."/".$cfname; }
+        $remotelinks{$curnrl}=$cfname;
+        if ($dodebug) { print "Link: ".$curnrl." -> ".$cfname."\n"; }
       }
       elsif ($cftype eq 'd') { 
         my $curnewrsd;
-	if ($curremotesubdir eq "") { $curnewrsd = $cfname; }
-	else                        { $curnewrsd = $curremotesubdir."/".$cfname; }
-	$remotedirs{$curnewrsd}=$curnewrsd;
-	if ($dodebug) { print "Directory: ".$curnewrsd."\n"; }
-	elsif (! $doquiet) { print ":"; }
-	push @currecursedirs, $cfname;
+        if ($curremotesubdir eq "") { $curnewrsd = $cfname; }
+        else                        { $curnewrsd = $curremotesubdir."/".$cfname; }
+        $remotedirs{$curnewrsd}=$curnewrsd;
+        if ($dodebug) { print "Directory: ".$curnewrsd."\n"; }
+        elsif (! $doquiet) { print ":"; }
+        push @currecursedirs, $cfname;
       }
       elsif ($cftype eq 'f') {  #plain file
         my $curnewrf;
-	if ($curremotesubdir eq "") { $curnewrf = $cfname; }
-	else                        { $curnewrf = $curremotesubdir."/".$cfname; }
-	$remotefiledates{$curnewrf}=$cftime;
-	if ($remotefiledates{$curnewrf} le 0) { die "Timeout detecting modification time of $curnewrf\n"; }
-	$remotefilesizes{$curnewrf}=$cfsize;
-	if ($remotefilesizes{$curnewrf} lt 0) { die "Timeout detecting size of $curnewrf\n"; }
-	if ($dodebug) { print "File: ".$curnewrf."\n"; }
-	elsif (! $doquiet) { print "."; }
+        if ($curremotesubdir eq "") { $curnewrf = $cfname; }
+        else                        { $curnewrf = $curremotesubdir."/".$cfname; }
+        $remotefiledates{$curnewrf}=$cftime;
+        if ($remotefiledates{$curnewrf} le 0) { die "Timeout detecting modification time of $curnewrf\n"; }
+        $remotefilesizes{$curnewrf}=$cfsize;
+        if ($remotefilesizes{$curnewrf} lt 0) { die "Timeout detecting size of $curnewrf\n"; }
+        if ($dodebug) { print "File: ".$curnewrf."\n"; }
+        elsif (! $doquiet) { print "."; }
       }
       elsif (! $doquiet) { print "Unkown file: $curlsline\n"; }
     }
@@ -475,12 +484,16 @@ sub buildremotetree() {
     $oldcurremotesubdir=$curremotesubdir;
     if ($curremotesubdir eq "") { $curremotesubdir = $currecurseddir; }
     else                        { $curremotesubdir .= "/".$currecurseddir; }
-    my $curcwddir=$ftpdir."/".$curremotesubdir;
+    my $curcwddir="";
+    if ($ftpdir eq "/")
+    { $curcwddir=$ftpdir.$curremotesubdir; }
+    else
+    { $curcwddir=$ftpdir."/".$curremotesubdir; }
     if ($dodebug) { print "Change dir: ".$curcwddir."\n"; }
     $ftpc->cwd($curcwddir) 
-	or die "Cannot cwd to  $curcwddir", $ftpc->message ;
+      or die "Cannot cwd to  $curcwddir", $ftpc->message ;
     if ($ftpc->pwd() ne $curcwddir) { 
-	die "Could not cwd to $curcwddir :" . $ftpc->message ; }
+      die "Could not cwd to $curcwddir :" . $ftpc->message ; }
     if (! $doquiet) { print "\n"; }
     buildremotetree();
     $ftpc->cdup();
@@ -496,23 +509,29 @@ sub clocksync {
     my $fndidexist=1;
 
     if(! -f $fn) {
-	open(SF, ">$fn") or 
-	    expire($conn, "Cannot create $fn for time sync option");
-	close(SF);
-	$fndidexist=0;
+      open(SF, ">$fn") or 
+      die "Cannot create $fn for time sync option";
+      close(SF);
+      $fndidexist=0;
     }
     -z $fn or
-	expire($conn, "File $fn for time sync must be empty.");
-
-    $conn->put($fn) or 
-	expire($conn, "$fn send failed: !!");
+      die "File $fn for time sync must be empty.";
+    my $putsyncok=1;
+    $conn->put($fn) or $putsyncok=0;
+    if (!$putsyncok)
+    { unlink($fn);  # cleanup!
+      die "Cannot send timesync file $fn";
+    }
 
     my $now_here = time();
     my $now_there = $conn->mdtm($fn) or
-	expire($conn, "Cannot get $fn write time");
+      die "Cannot get write time of timesync file $fn";
 
     $syncoff = $now_here - $now_there;
-    $syncoff -= 5; # Be a bit conservative.
+    $syncoff -= 59;
+    # Be a bit more conservative.
+    # as filesystem usually ignore seconds, 0-59 seconds seems a perfect time range
+    # for the upload of the temporary sync file
 
     #print "A: [$now_here] [$now_there] [$syncoff]\n";
 
@@ -522,7 +541,7 @@ sub clocksync {
     my $mins = int(abs($syncoff)/60) - $hrs*60;
     my $secs = abs($syncoff) - $hrs*3600 - $mins*60;
     if (! $doquiet) { 
-	printf("Clock sync offset: %d:%02d:%02d\n", $hrs, $mins, $secs); 
+      printf("Clock sync offset: %d:%02d:%02d\n", $hrs, $mins, $secs); 
     }
     unlink ($fn) unless $fndidexist;
 }
@@ -530,22 +549,22 @@ sub clocksync {
 
 sub listremotedirs() {
   if ($dodebug) {
-    print "Remote dirs (relative to ".$ftpdir."/):\n";
+    print "Remote dirs (relative to ".$ftpdir."):\n";
     my $curremotedir="";
     foreach $curremotedir (keys(%remotedirs))
     { print $curremotedir."/\n"; }
-    print "Remote files (relative to ".$ftpdir."/):\n";
+    print "Remote files (relative to ".$ftpdir."):\n";
     my $curremotefile="";
     foreach $curremotefile (keys(%remotefiledates))
     { print $curremotefile."\n"; }
-    print "Remote links (relative to ".$ftpdir."/):\n";
+    print "Remote links (relative to ".$ftpdir."):\n";
     my $curremotelink="";
     foreach $curremotelink (keys(%remotelinks))
     { print $curremotelink." -> ".$remotelinks{$curremotelink}."\n"; }
   }  
 }
 sub parseRemoteURL() {
-  if ($remoteURL =~ /^ftp:\/\/(([^@\/\\\:]+)(:([^@\/\\\:]+))?@)?([a-zA-Z01-9\.]+)\/(.+)/) {
+  if ($remoteURL =~ /^ftp:\/\/(([^@\/\\\:]+)(:([^@\/\\\:]+))?@)?([a-zA-Z01-9\.]+)\/(.*)/) {
     #print "DEBUG: parsing ".$remoteURL."\n";
     #print "match 1 = ".$1."\n";
     #print "match 2 = ".$2."\n";
@@ -558,6 +577,7 @@ sub parseRemoteURL() {
     if (length($4) > 0) { $ftppasswd=$4; }
     $ftpserver=$5;
     $ftpdir=$6;
+    #if ($ftpdir eq "") { $ftpdir="/"; }
   }
 }
 
@@ -572,7 +592,7 @@ sub print_syntax() {
   print "   localdir    local directory, defaults to \".\".\n";
   print "   ftpURL      full FTP URL, scheme\n";
   print '               ftp://[ftpuser[:ftppasswd]@]ftpserver/ftpdir'."\n";
-  print "               ftpdir is relative, so double / for absolute paths\n";
+  print "               ftpdir is relative, so double / for absolute paths as well as /\n";
   print "   -d | -D     turns debug output (including verbose output) on\n";
   print "   -g | -G     forces sync direction to GET (remote to local)\n";
   print "   -h | -H     turns debugging on\n";

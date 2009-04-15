@@ -1,4 +1,24 @@
 
+1.25 => 1.26 (2004-03-31)
+=========================
+
+ * direction detection now smarter and less dangerous
+ 
+
+1.24 => 1.25 (2004-03-20)
+=========================
+
+ * fixed some 1.24 bugs
+ * clock offset computation now more resistant against very slow connections
+ * clock offset computation disabled for GET mode, so mirroring of foreign
+   stuff is now possible again
+ * default localdir of . disabled, therefore
+ * using . as localdir parameter does not cause a parsing error any more
+ * replaced damn indentation tabs in sourcecode by appropriate number of 
+   spaces, so code is readable independent of tab settings
+ * enabled handling of ftpdir /
+ * handling of relative ftpdir corrected
+
 1.23 => 1.24 (2003-10-11)
 =========================
 
