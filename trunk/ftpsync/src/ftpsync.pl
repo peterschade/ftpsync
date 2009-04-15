@@ -66,6 +66,7 @@ my $dodebug=0;
 my $doquiet=0;
 my $doinfoonly=0;
 my $infotext="";
+my $docheckfirst=0;
 
 # Read command line options/parameters
 #print "Reading command line options.\n"; # For major problem debugging
@@ -104,9 +105,10 @@ for $curopt (@cfgfoptions, @cloptions) {
     for ($i=1; $i<length($curopt); $i++) {
       my $curoptchar=substr($curopt,$i,1);
       $noofopts++;
-      if    ($curoptchar =~ /[dD]/)  { $dodebug=1; $doverbose=1; $doquiet=0; }
+      if    ($curoptchar =~ /[cC]/)  { $docheckfirst=1; }
+      elsif ($curoptchar =~ /[dD]/)  { $dodebug=1; $doverbose=1; $doquiet=0; }
       elsif ($curoptchar =~ /[gG]/)  { $syncdirection="get"; }
-      elsif ($curoptchar =~ /[hH?]/)  { print_syntax(); exit 0; }
+      elsif ($curoptchar =~ /[hH?]/) { print_syntax(); exit 0; }
       elsif ($curoptchar =~ /[iI]/)  { $doinfoonly=1; }
       elsif ($curoptchar =~ /[pP]/)  { $syncdirection="put"; }
       elsif ($curoptchar =~ /[qQ]/)  { $dodebug=0; $doverbose=0; $doquiet=1; }
@@ -153,6 +155,9 @@ for $curopt (@cfgfoptions, @cloptions) {
   }      
 }
 if ($noofopts == 0) { print_syntax(); exit 0; }
+
+if($ftpuser   eq "?") { print "User: ";     $ftpuser=<STDIN>;   chomp($ftpuser);   }
+if($ftppasswd eq "?") { print "Password: "; $ftppasswd=<STDIN>; chomp($ftppasswd); }
 
 if ($dodebug) { print_options(); }
 # check options
@@ -221,165 +226,25 @@ listremotedirs();
 #print "Exiting.\n"; exit 0;
 
 # Work ...
-if ($doinfoonly)   { print "\nSimulating synchronization.\n"; }
-elsif (! $doquiet) { print "\nStarting synchronization.\n"; }
-chdir $localdir || die "Could not change to local base directory $localdir\n";
-if ($syncdirection eq "put") {
-  # create dirs missing at the target
-  if    ($doinfoonly) { print "\nWould create new remote directories.\n"; }
-  elsif (! $doquiet)  { print "\nCreating new remote directories.\n"; }
-  my $curlocaldir;
-  foreach $curlocaldir (sort { return length($a) <=> length($b); } keys(%localdirs))
-  { if (! exists $remotedirs{$curlocaldir})
-    { if ($doinfoonly) { print $curlocaldir."\n"; next; }
-      if ($doverbose)  { print $curlocaldir."\n"; }
-      elsif (! $doquiet) { print "d"; }
-      if ($ftpc->mkdir($curlocaldir) ne $curlocaldir) { die "Could not create remote subdirectory $curlocaldir\n"; }
-    }
+if ($doinfoonly) { $docheckfirst=0; }
+if ($docheckfirst)
+{ print "Simulating synchronization.\n";
+  $doinfoonly=1;
+  dosync();
+  $doinfoonly=0;
+  print "\nOK to really update files? (y/n) [n] ";
+  my $yn=<STDIN>;
+  if ($yn =~ /^y/i)
+  { print "OK, going to do it.\n";
   }
-  # copy files missing or too old at the target, synchronize timestamp _after_ copying
-  if    ($doinfoonly) { print "\nWould copy new(er) local files.\n"; }
-  elsif (! $doquiet)  { print "\nCopying new(er) local files.\n"; }
-  my $curlocalfile;
-  foreach $curlocalfile (sort { return length($b) <=> length($a); } keys(%localfiledates))
-  { my $dorefresh=0;
-    if    (! exists $remotefiledates{$curlocalfile}) { 
-      $dorefresh=1; 
-      $infotext="New: ".$curlocalfile." (".$localfilesizes{$curlocalfile}." bytes)\n";
-      if ($doinfoonly)   { print $infotext; next; }
-      elsif ($doverbose) { print $infotext; }
-      elsif (! $doquiet) { print "n"; }
-    }
-    elsif ($remotefiledates{$curlocalfile} < $localfiledates{$curlocalfile} + $syncoff ) { 
-      $dorefresh=1;
-      $infotext="Newer: ".$curlocalfile." (".$localfilesizes{$curlocalfile}." bytes, ".$localfiledates{$curlocalfile}." versus ".$remotefiledates{$curlocalfile}.")\n";
-      if ($doinfoonly) { print $infotext; next; }
-      if ($doverbose)  { print $infotext; }
-      elsif (! $doquiet) { print "u"; }
-    }
-    elsif ($remotefilesizes{$curlocalfile} != $localfilesizes{$curlocalfile}) { 
-      $dorefresh=1;
-      $infotext="Changed (different sized): ".$curlocalfile." (".$localfilesizes{$curlocalfile}."  versus ".$remotefilesizes{$curlocalfile}." bytes)\n";
-      if ($doinfoonly) { print $infotext; next; }
-      if ($doverbose)  { print $infotext; }
-      elsif (! $doquiet) { print "u"; }
-    }
-    if (! $dorefresh) { next; }
-    if ($dodebug) { print "Really PUTting file ".$curlocalfile."\n"; }
-    if ($ftpc->put($curlocalfile, $curlocalfile) ne $curlocalfile)
-    { print STDERR "Could not put localfile $curlocalfile\n"; }
-    my $retries = 3;
-    while ( ($ftpc->size($curlocalfile) != (lstat $curlocalfile)[7]) and ($retries-- > 0) )
-    { if (! $doquiet) { print "Re-Transfering $curlocalfile\n"; }
-      if ($ftpc->put($curlocalfile, $curlocalfile) ne $curlocalfile)
-      { print STDERR "Could not re-put localfile $curlocalfile\n"; }
-    }
-    my $newremotemdt=$ftpc->mdtm($curlocalfile);
-    utime ($newremotemdt, $newremotemdt, $curlocalfile);
-  }
-  # delete files too much at the target
-  if    ($doinfoonly) { print "\nWould delete obsolete remote files.\n"; }
-  elsif (! $doquiet)  { print "\nDeleting obsolete remote files.\n"; }
-  my $curremotefile;
-  foreach $curremotefile (keys(%remotefiledates)) 
-  { if (not exists $localfiledates{$curremotefile})
-    { if ($doinfoonly) { print $curremotefile."\n"; next; }
-      if ($doverbose)  { print $curremotefile."\n"; }
-      elsif (! $doquiet) { print "r"; }
-      if ($ftpc->delete($curremotefile) ne 1) { die "Could not delete remote file $curremotefile\n"; }
-    }
-  }
-  # delete dirs too much at the target
-  if    ($doinfoonly) { print "\nWould delete obsolete remote directories.\n"; }
-  elsif (! $doquiet)  { print "\nDeleting obsolete remote directories.\n"; }
-  my $curremotedir;
-  foreach $curremotedir (sort { return length($b) <=> length($a); } keys(%remotedirs))
-  { if (! exists $localdirs{$curremotedir})
-    { if ($doinfoonly) { print $curremotedir."\n"; next; }
-      if ($doverbose)  { print $curremotedir."\n"; }
-      elsif (! $doquiet) { print "R"; }
-      if ($ftpc->rmdir($curremotedir) ne 1) { die "Could not remove remote subdirectory $curremotedir\n"; }
-    }
-  }
-} else { # $syncdirection eq "GET"
-  # create dirs missing at the target
-  if    ($doinfoonly) { print "\nWould create new local directories.\n"; }
-  elsif (! $doquiet)  { print "\nCreating new local directories.\n"; }
-  my $curremotedir;
-  foreach $curremotedir (sort { return length($a) <=> length($b); } keys(%remotedirs))
-  { if (! exists $localdirs{$curremotedir})
-    { if ($doinfoonly) { print $curremotedir."\n"; next; }
-      if ($doverbose)  { print $curremotedir."\n"; }
-      elsif (! $doquiet) { print "d"; }
-      mkdir($curremotedir) || die "Could not create local subdirectory $curremotedir\n";
-    }
-  }
-  # copy files missing or too old at the target, synchronize timestamp _after_ copying
-  if    ($doinfoonly) { print "\nWould copy new(er) remote files.\n"; }
-  elsif (! $doquiet)  { print "\nCopying new(er) remote files.\n"; }
-  my $curremotefile;
-  foreach $curremotefile (sort { return length($b) <=> length($a); } keys(%remotefiledates))
-  { my $dorefresh=0;
-    if    (! exists $localfiledates{$curremotefile}) { 
-      $dorefresh=1; 
-      $infotext="New: ".$curremotefile." (".$remotefilesizes{$curremotefile}." bytes)\n";
-      if ($doinfoonly) { print $infotext; next; }
-      if ($doverbose)  { print $infotext; }
-      elsif (! $doquiet) { print "n"; }
-    }
-    elsif ($remotefiledates{$curremotefile} > $localfiledates{$curremotefile}) { 
-      $dorefresh=1;
-      $infotext="Newer: ".$curremotefile." (".$remotefilesizes{$curremotefile}." bytes, ".$remotefiledates{$curremotefile}." versus ".$localfiledates{$curremotefile}.")\n";
-      if ($doinfoonly) { print $infotext; next; }
-      if ($doverbose)  { print $infotext; }
-      elsif (! $doquiet) { print "u"; }
-    }
-    elsif ($remotefilesizes{$curremotefile} != $localfilesizes{$curremotefile}) { 
-      $dorefresh=1;
-      $infotext="Changed (different sized): ".$curremotefile." (".$remotefilesizes{$curremotefile}." bytes)\n";
-      if ($doinfoonly) { print $infotext; next; }
-      if ($doverbose)  { print $infotext; }
-      elsif (! $doquiet) { print "c"; }
-    }
-    if (! $dorefresh) { next; }
-    if ($dodebug) { print "Really GETting file ".$curremotefile."\n"; }
-    my $rc=$ftpc->get($curremotefile, $curremotefile);
-    if ( ($rc eq undef) or ($rc ne $curremotefile) )
-    { print STDERR "Could not get file ".$curremotefile."\n"; }
-    my $retries=3;
-    while ( ($ftpc->size($curremotefile) != (lstat $curremotefile)[7]) and ($retries-- > 0) )
-    { if (! $doquiet) { print "Re-Transfering $curremotefile\n"; }
-      if ( ($rc eq undef) or ($rc ne $curremotefile) )
-      { print STDERR "Could not get file ".$curremotefile."\n"; }
-    }
-    my $newlocalmdt=$remotefiledates{$curremotefile};
-    utime ($newlocalmdt, $newlocalmdt, $curremotefile);
-  }
-  # delete files too much at the target
-  if    ($doinfoonly) { print "\nWould delete obsolete local files.\n"; }
-  elsif (! $doquiet)  { print "\nDeleting obsolete local files.\n"; }
-  my $curlocalfile;
-  foreach $curlocalfile (sort { return length($b) <=> length($a); } keys(%localfiledates)) 
-  { if (not exists $remotefiledates{$curlocalfile})
-    { if ($doinfoonly) { print $curlocalfile."\n"; next; }
-      if ($doverbose)  { print $curlocalfile."\n"; }
-      elsif (! $doquiet) { print "r"; }
-      if (unlink($curlocalfile) ne 1) { die "Could not remove local file $curlocalfile\n"; }
-    }
-  }
-  # delete dirs too much at the target
-  if    ($doinfoonly) { print "\nWould delete obsolete local directories.\n"; }
-  elsif (! $doquiet)  { print "\nDeleting obsolete local directories.\n"; }
-  my $curlocaldir;
-  foreach $curlocaldir (keys(%localdirs))
-  { if (! exists $remotedirs{$curlocaldir})
-    { if ($doinfoonly) { print $curlocaldir."\n"; next; }
-      if ($doverbose)  { print $curlocaldir."\n"; }
-      elsif (! $doquiet) { print "d"; }
-      rmdir($curlocaldir) || die "Could not remove local subdirectory $curlocaldir\n";
-    }
+  else
+  { print "OK, exiting without actions.\n";
+    exit 1; 
   }
 }
+if ($doinfoonly)   { print "\nSimulating synchronization.\n"; }
+elsif (! $doquiet) { print "\nStarting synchronization.\n"; }
+dosync();
 
 if (!$doquiet) { print "Done.\n"; }
 
@@ -478,7 +343,8 @@ sub buildremotetree() {
         my $curnewrf;
         if ($curremotesubdir eq "") { $curnewrf = $cfname; }
         else                        { $curnewrf = $curremotesubdir."/".$cfname; }
-        $remotefiledates{$curnewrf}=$cftime;
+        #$remotefiledates{$curnewrf}=$cftime;
+        $remotefiledates{$curnewrf}=$ftpc->mdtm($cfname)+$syncoff;
         if ($remotefiledates{$curnewrf} le 0) { die "Timeout detecting modification time of $curnewrf\n"; }
         $remotefilesizes{$curnewrf}=$cfsize;
         if ($remotefilesizes{$curnewrf} lt 0) { die "Timeout detecting size of $curnewrf\n"; }
@@ -521,8 +387,7 @@ sub clocksync {
     my $fndidexist=1;
 
     if(! -f $fn) {
-      open(SF, ">$fn") or 
-      die "Cannot create $fn for time sync option";
+      open(SF, ">$fn") or die "Cannot create $fn for time sync option";
       close(SF);
       $fndidexist=0;
     }
@@ -535,17 +400,21 @@ sub clocksync {
       die "Cannot send timesync file $fn";
     }
 
-    my $now_here = time();
+    my $now_here1 = time();
     my $now_there = $conn->mdtm($fn) or
       die "Cannot get write time of timesync file $fn";
+    my $now_here2 = time();
 
-    $syncoff = $now_here - $now_there;
-    $syncoff -= 59;
-    # Be a bit more conservative.
-    # as filesystem usually ignore seconds, 0-59 seconds seems a perfect time range
-    # for the upload of the temporary sync file
-
-    #print "A: [$now_here] [$now_there] [$syncoff]\n";
+    if ($now_here2 < $now_there)      # remote is in the future
+    { $syncoff=($now_there - $now_here1);
+      $syncoff -= $syncoff % 60;
+      $syncoff = 0-$syncoff;
+    }
+    else
+    #if ($now_here1 > $now_there)      # remote is the past # or equal
+    { $syncoff=($now_here2 - $now_there);
+      $syncoff -= $syncoff % 60;
+    }
 
     $conn->delete($fn);
     
@@ -556,6 +425,168 @@ sub clocksync {
       printf("Clock sync offset: %d:%02d:%02d\n", $hrs, $mins, $secs); 
     }
     unlink ($fn) unless $fndidexist;
+}
+
+
+sub dosync()
+{
+  chdir $localdir || die "Could not change to local base directory $localdir\n";
+  if ($syncdirection eq "put") {
+    # create dirs missing at the target
+    if    ($doinfoonly) { print "\nWould create new remote directories.\n"; }
+    elsif (! $doquiet)  { print "\nCreating new remote directories.\n"; }
+    my $curlocaldir;
+    foreach $curlocaldir (sort { return length($a) <=> length($b); } keys(%localdirs))
+    { if (! exists $remotedirs{$curlocaldir})
+      { if ($doinfoonly) { print $curlocaldir."\n"; next; }
+        if ($doverbose)  { print $curlocaldir."\n"; }
+        elsif (! $doquiet) { print "d"; }
+        if ($ftpc->mkdir($curlocaldir) ne $curlocaldir) { die "Could not create remote subdirectory $curlocaldir\n"; }
+      }
+    }
+    # copy files missing or too old at the target, synchronize timestamp _after_ copying
+    if    ($doinfoonly) { print "\nWould copy new(er) local files.\n"; }
+    elsif (! $doquiet)  { print "\nCopying new(er) local files.\n"; }
+    my $curlocalfile;
+    foreach $curlocalfile (sort { return length($b) <=> length($a); } keys(%localfiledates))
+    { my $dorefresh=0;
+      if    (! exists $remotefiledates{$curlocalfile}) { 
+        $dorefresh=1; 
+        $infotext="New: ".$curlocalfile." (".$localfilesizes{$curlocalfile}." bytes)\n";
+        if ($doinfoonly)   { print $infotext; next; }
+        elsif ($doverbose) { print $infotext; }
+        elsif (! $doquiet) { print "n"; }
+      }
+      elsif ($remotefiledates{$curlocalfile} < $localfiledates{$curlocalfile}) { 
+        $dorefresh=1;
+        $infotext="Newer: ".$curlocalfile." (".$localfilesizes{$curlocalfile}." bytes, ".$localfiledates{$curlocalfile}." versus ".$remotefiledates{$curlocalfile}.")\n";
+        if ($doinfoonly) { print $infotext; next; }
+        if ($doverbose)  { print $infotext; }
+        elsif (! $doquiet) { print "u"; }
+      }
+      elsif ($remotefilesizes{$curlocalfile} != $localfilesizes{$curlocalfile}) { 
+        $dorefresh=1;
+        $infotext="Changed (different sized): ".$curlocalfile." (".$localfilesizes{$curlocalfile}."  versus ".$remotefilesizes{$curlocalfile}." bytes)\n";
+        if ($doinfoonly) { print $infotext; next; }
+        if ($doverbose)  { print $infotext; }
+        elsif (! $doquiet) { print "u"; }
+      }
+      if (! $dorefresh) { next; }
+      if ($dodebug) { print "Really PUTting file ".$curlocalfile."\n"; }
+      if ($ftpc->put($curlocalfile, $curlocalfile) ne $curlocalfile)
+      { print STDERR "Could not put localfile $curlocalfile\n"; }
+      my $retries = 3;
+      while ( ($ftpc->size($curlocalfile) != (lstat $curlocalfile)[7]) and ($retries-- > 0) )
+      { if (! $doquiet) { print "Re-Transfering $curlocalfile\n"; }
+        if ($ftpc->put($curlocalfile, $curlocalfile) ne $curlocalfile)
+        { print STDERR "Could not re-put localfile $curlocalfile\n"; }
+      }
+      my $newremotemdt=$ftpc->mdtm($curlocalfile)+$syncoff;
+      utime ($newremotemdt, $newremotemdt, $curlocalfile);
+    }
+    # delete files too much at the target
+    if    ($doinfoonly) { print "\nWould delete obsolete remote files.\n"; }
+    elsif (! $doquiet)  { print "\nDeleting obsolete remote files.\n"; }
+    my $curremotefile;
+    foreach $curremotefile (keys(%remotefiledates)) 
+    { if (not exists $localfiledates{$curremotefile})
+      { if ($doinfoonly) { print $curremotefile."\n"; next; }
+        if ($doverbose)  { print $curremotefile."\n"; }
+        elsif (! $doquiet) { print "r"; }
+        if ($ftpc->delete($curremotefile) ne 1) { die "Could not delete remote file $curremotefile\n"; }
+      }
+    }
+    # delete dirs too much at the target
+    if    ($doinfoonly) { print "\nWould delete obsolete remote directories.\n"; }
+    elsif (! $doquiet)  { print "\nDeleting obsolete remote directories.\n"; }
+    my $curremotedir;
+    foreach $curremotedir (sort { return length($b) <=> length($a); } keys(%remotedirs))
+    { if (! exists $localdirs{$curremotedir})
+      { if ($doinfoonly) { print $curremotedir."\n"; next; }
+        if ($doverbose)  { print $curremotedir."\n"; }
+        elsif (! $doquiet) { print "R"; }
+        if ($ftpc->rmdir($curremotedir) ne 1) { die "Could not remove remote subdirectory $curremotedir\n"; }
+      }
+    }
+  } else { # $syncdirection eq "GET"
+    # create dirs missing at the target
+    if    ($doinfoonly) { print "\nWould create new local directories.\n"; }
+    elsif (! $doquiet)  { print "\nCreating new local directories.\n"; }
+    my $curremotedir;
+    foreach $curremotedir (sort { return length($a) <=> length($b); } keys(%remotedirs))
+    { if (! exists $localdirs{$curremotedir})
+      { if ($doinfoonly) { print $curremotedir."\n"; next; }
+        if ($doverbose)  { print $curremotedir."\n"; }
+        elsif (! $doquiet) { print "d"; }
+        mkdir($curremotedir) || die "Could not create local subdirectory $curremotedir\n";
+      }
+    }
+    # copy files missing or too old at the target, synchronize timestamp _after_ copying
+    if    ($doinfoonly) { print "\nWould copy new(er) remote files.\n"; }
+    elsif (! $doquiet)  { print "\nCopying new(er) remote files.\n"; }
+    my $curremotefile;
+    foreach $curremotefile (sort { return length($b) <=> length($a); } keys(%remotefiledates))
+    { my $dorefresh=0;
+      if    (! exists $localfiledates{$curremotefile}) { 
+        $dorefresh=1; 
+        $infotext="New: ".$curremotefile." (".$remotefilesizes{$curremotefile}." bytes)\n";
+        if ($doinfoonly) { print $infotext; next; }
+        if ($doverbose)  { print $infotext; }
+        elsif (! $doquiet) { print "n"; }
+      }
+      elsif ($remotefiledates{$curremotefile} > $localfiledates{$curremotefile}) { 
+        $dorefresh=1;
+        $infotext="Newer: ".$curremotefile." (".$remotefilesizes{$curremotefile}." bytes, ".$remotefiledates{$curremotefile}." versus ".$localfiledates{$curremotefile}.")\n";
+        if ($doinfoonly) { print $infotext; next; }
+        if ($doverbose)  { print $infotext; }
+        elsif (! $doquiet) { print "u"; }
+      }
+      elsif ($remotefilesizes{$curremotefile} != $localfilesizes{$curremotefile}) { 
+        $dorefresh=1;
+        $infotext="Changed (different sized): ".$curremotefile." (".$remotefilesizes{$curremotefile}." bytes)\n";
+        if ($doinfoonly) { print $infotext; next; }
+        if ($doverbose)  { print $infotext; }
+        elsif (! $doquiet) { print "c"; }
+      }
+      if (! $dorefresh) { next; }
+      if ($dodebug) { print "Really GETting file ".$curremotefile."\n"; }
+      my $rc=$ftpc->get($curremotefile, $curremotefile);
+      if ( ($rc eq undef) or ($rc ne $curremotefile) )
+      { print STDERR "Could not get file ".$curremotefile."\n"; }
+      my $retries=3;
+      while ( ($ftpc->size($curremotefile) != (lstat $curremotefile)[7]) and ($retries-- > 0) )
+      { if (! $doquiet) { print "Re-Transfering $curremotefile\n"; }
+        if ( ($rc eq undef) or ($rc ne $curremotefile) )
+        { print STDERR "Could not get file ".$curremotefile."\n"; }
+      }
+      my $newlocalmdt=$remotefiledates{$curremotefile};
+      utime ($newlocalmdt, $newlocalmdt, $curremotefile);
+    }
+    # delete files too much at the target
+    if    ($doinfoonly) { print "\nWould delete obsolete local files.\n"; }
+    elsif (! $doquiet)  { print "\nDeleting obsolete local files.\n"; }
+    my $curlocalfile;
+    foreach $curlocalfile (sort { return length($b) <=> length($a); } keys(%localfiledates)) 
+    { if (not exists $remotefiledates{$curlocalfile})
+      { if ($doinfoonly) { print $curlocalfile."\n"; next; }
+        if ($doverbose)  { print $curlocalfile."\n"; }
+        elsif (! $doquiet) { print "r"; }
+        if (unlink($curlocalfile) ne 1) { die "Could not remove local file $curlocalfile\n"; }
+      }
+    }
+    # delete dirs too much at the target
+    if    ($doinfoonly) { print "\nWould delete obsolete local directories.\n"; }
+    elsif (! $doquiet)  { print "\nDeleting obsolete local directories.\n"; }
+    my $curlocaldir;
+    foreach $curlocaldir (keys(%localdirs))
+    { if (! exists $remotedirs{$curlocaldir})
+      { if ($doinfoonly) { print $curlocaldir."\n"; next; }
+        if ($doverbose)  { print $curlocaldir."\n"; }
+        elsif (! $doquiet) { print "d"; }
+        rmdir($curlocaldir) || die "Could not remove local subdirectory $curlocaldir\n";
+      }
+    }
+  }
 }
 
 
@@ -596,7 +627,7 @@ sub parseRemoteURL() {
 
 sub print_syntax() {
   print "\n";
-  print "FTPSync.pl 1.26 (2004-03-31)\n";
+  print "FTPSync.pl 1.27 (2004-08-23)\n";
   print "\n";
   print " ftpsync [ options ] [ localdir remoteURL ]\n";
   print " ftpsync [ options ] [ remoteURL localdir ]\n";
@@ -605,6 +636,7 @@ sub print_syntax() {
   print "   ftpURL      full FTP URL, scheme\n";
   print '               ftp://[ftpuser[:ftppasswd]@]ftpserver/ftpdir'."\n";
   print "               ftpdir is relative, so double / for absolute paths as well as /\n";
+  print "   -c | -C     like -i, but then prompts whether to actually do work\n";
   print "   -d | -D     turns debug output (including verbose output) on\n";
   print "   -g | -G     forces sync direction to GET (remote to local)\n";
   print "   -h | -H     turns debugging on\n";

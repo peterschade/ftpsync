@@ -1,4 +1,13 @@
 
+1.26 => 1.27 (2004-08-23)
+=========================
+
+ * Proposed and partially provided by Samuel Marshall <sam@leafdigital.com>
+ * enhanced timezone handling, should be perfect now
+ * new option -c, like -i but then asks interactively to let do it
+ * if FTP user/password are set to ?, they are asked for interactively
+
+
 1.25 => 1.26 (2004-03-31)
 =========================
 
