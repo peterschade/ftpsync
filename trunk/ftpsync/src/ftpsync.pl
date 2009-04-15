@@ -67,6 +67,7 @@ my $doquiet=0;
 my $doinfoonly=0;
 my $infotext="";
 my $docheckfirst=0;
+my $ignoremask = undef;
 
 # Read command line options/parameters
 #print "Reading command line options.\n"; # For major problem debugging
@@ -143,6 +144,7 @@ for $curopt (@cfgfoptions, @cloptions) {
                                     if ( $syncdirection eq "" ) { $syncdirection="put"; }
                                   }
     elsif ($fname eq "timeout")   { if ($fvalue>0) { $ftptimeout =$fvalue; } }
+    elsif ($fname eq "ignoremask") { $ignoremask = $fvalue; }
   }  
   else {
     if ($localdir eq "") {
@@ -264,6 +266,13 @@ sub buildlocaltree() {
   sub noticelocalfile {
     my $relfilename=substr($File::Find::name,$ldl);
     if (length($relfilename) == 0) { return; }
+    if ($ignoremask ne "")
+      {
+        if ($relfilename =~ /$ignoremask/ ) 
+        { if ($doverbose) { print "Ignoring ".$relfilename." which matches ".$ignoremask."\n"; }
+          return;
+        }
+      }
     if (-d $_) {
       if ($dodebug) { print "Directory: ".$File::Find::name."\n"; }
       elsif (! $doquiet) { print ":"; }
@@ -323,6 +332,17 @@ sub buildremotetree() {
     if ( $cftype ) {
       if ($cfname eq ".") { next; }
       if ($cfname eq "..") { next; }
+      if ($ignoremask ne "")
+        {
+	  my $testpath;
+          if ($curremotesubdir eq "") { $testpath = $cfname; }
+          else                        { $testpath = $curremotesubdir."/".$cfname; }
+          if ($testpath =~ /$ignoremask/ ) 
+            {
+              if ($doverbose) { print "Ignoring ".$testpath." which matches ".$ignoremask."\n"; }
+              next;
+            }
+        }
       if (substr($cftype,0,1) eq 'l') {  # link, rest of string = linkto
         my $curnrl;
         if ($curremotesubdir eq "") { $curnrl = $cfname; }

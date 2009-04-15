@@ -1,4 +1,12 @@
 
+1.28 => 1.29 (2006-05-22)
+=========================
+
+ Proposed by Brian Drawert <brian@deadtide.com>
+
+ * added param ignoremask to ignore certain directories/files
+
+
 1.27 => 1.28 (2006-03-12)
 =========================
 
