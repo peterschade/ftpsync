@@ -1,4 +1,11 @@
 
+1.21 => 1.22 (2003-03-24)
+=========================
+
+ * Now cuts of / at directory spec's end, to avoid pwd() being different 
+   from target of cwd() (which lead to unneccesarry abortions)
+   
+
 1.20 => 1.21 (2003-03-24)
 =========================
 

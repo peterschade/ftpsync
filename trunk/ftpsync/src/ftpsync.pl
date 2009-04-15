@@ -118,11 +118,11 @@ for $curopt (@cfgfoptions, @cloptions) {
   elsif ($curopt =~ /^[a-z]+=.+/) {
     my ($fname, $fvalue) = split /=/, $curopt, 2;
     if    ($fname eq "cfg")       { next; }
-    elsif ($fname eq "ftpdir")    { $ftpdir   =$fvalue; }
+    elsif ($fname eq "ftpdir")    { $ftpdir   =$fvalue; $ftpdir=~s/\/$//; }
     elsif ($fname =~ m/ftppass(w(or)?d)?/i) { $ftppasswd=$fvalue; }
     elsif ($fname eq "ftpserver") { $ftpserver=$fvalue; }
     elsif ($fname eq "ftpuser")   { $ftpuser  =$fvalue; }
-    elsif ($fname eq "localdir")  { $localdir =$fvalue; }
+    elsif ($fname eq "localdir")  { $localdir =$fvalue; $localdir=~s/\/$//; }
   }  
   else {
     if ($localdir eq "") {
@@ -169,7 +169,7 @@ $ftpc->login($ftpuser,$ftppasswd) || die "Could not login to $ftpserver as $ftpu
 if ($dodebug) { print "Changing to remote directory $ftpdir.\n" }
 $ftpc->binary();
 $ftpc->cwd($ftpdir);
-if ($ftpc->pwd() ne $ftpdir) { die "Could not change to remote base directory $localdir\n"; }
+if ($ftpc->pwd() ne $ftpdir) { die "Could not change to remote base directory $ftpdir\n"; }
 #if ($dodebug) { print "Remote directory is now ".$ftpc->pwd()."\n"; }
 my %remotefilesizes=();
 my %remotefiledates=();
@@ -516,7 +516,7 @@ sub parseRemoteURL() {
 
 sub print_syntax() {
   print "\n";
-  print "FTPSync.pl 1.21 (2003-03-24)\n";
+  print "FTPSync.pl 1.22 (2003-03-24)\n";
   print "\n";
   print " ftpsync [ options ] [ localdir remoteURL ]\n";
   print " ftpsync [ options ] [ remoteURL localdir ]\n";
