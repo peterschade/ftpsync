@@ -40,6 +40,7 @@ use File::Find;
 use File::Listing;
 use Net::FTP;
 use Net::Cmd;
+use Net::Netrc;
 use strict;
 # flushing ...
 use IO::Handle;
@@ -171,6 +172,22 @@ for $curopt (@cfgfoptions, @cloptions) {
   }
 }
 if ($noofopts == 0) { print_syntax(); exit 0; }
+
+# .netrc support 
+if ( ($ftpserver ne "") and ($ftppasswd eq "anonymous") ) {
+  if ($ftpuser eq "ftp") {
+    my $netrcdata = Net::Netrc->lookup($ftpserver);
+    if ( defined $netrcdata ) {
+      $ftpuser = $netrcdata->login;
+      $ftppasswd = $netrcdata->password;
+    }
+  } else { 
+    my $netrcdata = Net::Netrc->lookup($ftpserver,$ftpuser);
+    if ( defined $netrcdata ) {
+      $ftppasswd = $netrcdata->password;
+    }
+  }
+}
 
 if($ftpuser   eq "?") { print "User: ";     $ftpuser=<STDIN>;   chomp($ftpuser);   }
 if($ftppasswd eq "?") { print "Password: "; $ftppasswd=<STDIN>; chomp($ftppasswd); }
@@ -446,7 +463,8 @@ sub buildremotetree() {
     if ($dodebug) { print "Change dir: ".$curcwddir."\n"; }
     $ftpc->cwd($curcwddir)
       or die "Cannot cwd to  $curcwddir", $ftpc->message ;
-    if ($ftpc->pwd() ne $curcwddir) {
+    my $ftpcurdir=$ftpc->pwd();
+    if ($ftpcurdir ne $curcwddir && $ftpcurdir ne "$curcwddir".'/') {
       die "Could not cwd to $curcwddir :" . $ftpc->message ; }
     if ($doverbose gt 1) { print "\n"; }
     buildremotetree();
@@ -715,7 +733,7 @@ sub parseRemoteURL() {
 
 sub print_syntax() {
   print "\n";
-  print "FTPSync.pl 1.3.01 (2009-04-15)\n";
+  print "FTPSync.pl 1.3.03 (2009-06-10)\n";
   print "\n";
   print " ftpsync [ options ] [ localdir remoteURL ]\n";
   print " ftpsync [ options ] [ remoteURL localdir ]\n";
@@ -747,6 +765,12 @@ sub print_syntax() {
   print " Later mentioned options and parameters overwrite those mentioned earlier.\n";
   print " Command line options and parameters overwrite those in the config file.\n";
   print " Don't use '\"', although mentioned default values might motiviate you to.\n";
+  print "\n";
+  print " If ftpuser or ftppasswd resovle to ? (no matter through which options),\n";
+  print " ftpsync.pl asks you for those interactively.\n";
+  print "\n";
+  print " As of 1.3.02 .netrc is used if ftppassword or ftppassword and ftpuser)\n";
+  print " are still empty after parsing all options.\n";
   print "\n";
 }
 
