@@ -11,30 +11,11 @@ cd $PROJECTDIR
 
 scripts/rebuild.sh || exit 1
 
-if [ ! -d public_html ]
-then
-  mkdir -pv public_html
-  echo "Synching from cw01 AKA http://ossw.ibcl.at/FTPSync"
-  xsync root@cw01.ibcl.at:/var/www/htdocs/w3ibcl/ossw.ibcl.at/FTPSync public_html
-else
-  echo "Using local public_html as master"
-fi
-
 FSVER=$(cat src/ftpsync.pl |grep 'print "FTPSync.pl ' |awk '{print $3}')
 FSTBZ="target/ftpsync-$FSVER.tar.bz2"
 echo "Publishing FTPSync.pl $FSVER aka $FSTBZ"
-cp -uva $FSTBZ public_html/
-cp -uva $FSTBZ public_html/ftpsync-latest.tar.bz2
-cp -uva site/*.html public_html
 
-echo "Synching to cw01 AKA http://ossw.ibcl.at/FTPSync"
-xsync public_html root@cw01.ibcl.at:/var/www/htdocs/w3ibcl/ossw.ibcl.at/FTPSync
-ssh root@cw01.ibcl.at cpacls -R /var/www/htdocs/w3ibcl/ossw.ibcl.at /var/www/htdocs/w3ibcl/ossw.ibcl.at/FTPSync
-
-echo "Synching to sourceforge AKA http://ftpsync.sourceforge.net/"
-xsync public_html ibcl,ftpsync@web.sourceforge.net:/home/groups/f/ft/ftpsync/htdocs/
-ssh -t ibcl,ftpsync@shell.sourceforge.net chmod -R ugo+rx /home/groups/f/ft/ftpsync/htdocs/*
-
-# rsync -avP -e ssh pub/ftpsync-1.2.34.tar.bz2 ibcl@frs.sourceforge.net:uploads/
-
+echo "cp-ing to clazzes.org AKA https://download.clazzes.org/ftpsync/"
+chmod 0755 $FSTBZ
+scp $FSTBZ ftpsync@clazzes.org:/var/www/htdocs/download.clazzes.org/ftpsync/
 

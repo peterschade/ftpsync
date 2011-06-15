@@ -159,6 +159,7 @@ for $curopt (@cfgfoptions, @cloptions) {
                                   }
     elsif ($fname eq "timeout")   { if ($fvalue>0) { $ftptimeout =$fvalue; } }
     elsif ($fname eq "ignoremask") { $ignoremask = $fvalue; }
+    elsif ($fname eq "timeoffset") { $syncoff = $fvalue; }
   }
   else {
     if ($localdir eq "") {
@@ -212,7 +213,7 @@ my $ftpc;
 connection();
 
 if (! $doquiet) { print "\nDetermine s offset.\n"; }
-if (($notimestamping+$notimestampcheck) lt 2 && $syncdirection eq "put") 
+if (($notimestamping+$notimestampcheck) lt 2 && $syncdirection eq "put" && $syncoff == 0) 
 { clocksync($ftpc,"syncfile"); }
 
 #  local & remote tree vars
@@ -733,7 +734,7 @@ sub parseRemoteURL() {
 
 sub print_syntax() {
   print "\n";
-  print "FTPSync.pl 1.3.03 (2009-07-03)\n";
+  print "FTPSync.pl 1.3.04 (2011-06-15)\n";
   print "\n";
   print " ftpsync [ options ] [ localdir remoteURL ]\n";
   print " ftpsync [ options ] [ remoteURL localdir ]\n";
@@ -752,7 +753,7 @@ sub print_syntax() {
   print "   -l | -L     follow local symbolic links as if they were directories\n";
   print "   -p | -P     forces sync direction to PUT (local to remote)\n";
   print "   -q | -Q     turns quiet operation on\n";
-  print "   -s | -S     turns usage timestamps comparison (only checks for changes in size)\n";
+  print "   -s | -S     turns timestamp comparison off (only checks for changes in size)\n";
   print "   -t | -T     turns timestamp setting for local files off\n"; # backward compatibility
   print "   -v | -V     turnes verbose output on\n";
   print "   cfg=        read parameters and options from file defined by value.\n";
@@ -761,6 +762,7 @@ sub print_syntax() {
   print "   ftpuser=    defines the FTP user, defaults to \"ftp\".\n";
   print "   ftppasswd=  defines the FTP password, defaults to \"anonymous\".\n";
   print "   ignoremask= defines a regexp to ignore certain files, like .svn"."\n";
+  print "   timeoffset= overrules clocksync() detection with given offset in seconds"."\n";
   print "\n";
   print " Later mentioned options and parameters overwrite those mentioned earlier.\n";
   print " Command line options and parameters overwrite those in the config file.\n";
