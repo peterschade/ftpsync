@@ -1,0 +1,7 @@
+ftpsync (1.3.05-0) any; urgency=low
+
+  * Initial debianization of FTPSync.pl
+  * For older Changes, see Changes_1.00-1.3.04.txt
+
+ -- Christoph Lechleitner <lech@ibcl.at>  Wed, 15 Jun 2010 13:28:00 +0200
+

@@ -11,11 +11,13 @@ cd $PROJECTDIR
 
 scripts/rebuild.sh || exit 1
 
-FSVER=$(cat src/ftpsync.pl |grep 'print "FTPSync.pl ' |awk '{print $3}')
+FSVER=$(/usr/share/pba-cbs/sh/get_deb_version.sh $PROJECTDIR)
 FSTBZ="target/ftpsync-$FSVER.tar.bz2"
 echo "Publishing FTPSync.pl $FSVER aka $FSTBZ"
 
 echo "cp-ing to clazzes.org AKA https://download.clazzes.org/ftpsync/"
 chmod 0755 $FSTBZ
 scp $FSTBZ ftpsync@clazzes.org:/var/www/htdocs/download.clazzes.org/ftpsync/
+
+rm -rf target/ftpsync*
 

@@ -1,0 +1,15 @@
+Source: ftpsync
+Section: utils
+Priority: optional
+Maintainer: Christoph Lechleitner <lech@ibcl.at>
+Build-Depends: pba-cbs
+XBCS-PBA-Category: ftpsync
+XBCS-PBA-Generation: 1
+XBCS-PBA-Distribution: any
+XBCS-PBA-Repositories: deb.clazzes.org
+
+Package: ftpsync
+Depends: bash, perl-modules, libwww-perl
+Architecture: all
+Description: FTPSync.pl is a Perl script to synchronize a local directory tree and a remote FTP directory tree.
+

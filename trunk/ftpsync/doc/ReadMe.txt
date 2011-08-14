@@ -43,14 +43,11 @@ Requirements / Restrictions:
 
 - Perl 5.6+
   ftpsync.pl was initially developed on Perl 5.6.0-81 on SuSE Linux 7.2,
-  older Perl 5.x version might work. Test reports welcome at ftpsync@ibcl.at!
+  older Perl 5.x version might work.
 
-- File::Find, IO::Handle
-  IMHO parts of the basic perl package.
+- File::Find, IO::Handle, Net::FTP
+  Usually parts of the basic perl package.
 
-- Net::FTP
-  Part of the libnet-perl package.
-  
 - File::Listing
   Part of the libwww-perl package.
   
@@ -62,11 +59,10 @@ Requirements / Restrictions:
   It is being tested only against UNIX based FTP servers.
 
 
-Bug-Reports, contact:
+Homepage:
 ---------------------
 
-Besides ftpsync.sourceforge.net, ftpsync@ibcl.at is a good target for comments
-of any kind.
+http://www.clazzes.org/ftpsync
 
 
 License:
@@ -92,7 +88,7 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-See attached file COPYING.
+See attached file License.txt.
 
 
 FTPSync.pl as eMail ware:
@@ -109,8 +105,8 @@ Updates
 -------
 
 The software and updates should be available from 
-http://ftpsync.sourceforge.net/
-http://www.ibcl.at/ossw/FTPSync
+https://download.clazzes.org/ftpsync
+http:s//deb.clazzes.org/
 
 
 Thanks

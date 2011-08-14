@@ -8,20 +8,18 @@
 PROJECTDIR=$(cd $(dirname $0)/.. ; pwd)
 cd $PROJECTDIR
 
-mkdir -pv target
 rm -rf target/ftpsync*
+mkdir -pv target
 
-FSVER=$(cat src/ftpsync.pl |grep 'print "FTPSync.pl ' |awk '{print $3}')
+FSVER=$(/usr/share/pba-cbs/sh/get_deb_version.sh .)
 echo "Building FTPSync.pl $FSVER"
 
 COLLECTDIR="target/ftpsync-$FSVER"
 mkdir -pv $COLLECTDIR
 cp -avu \
   src/ftpsync.pl \
-  doc/COPYING \
-  doc/Changes \
-  doc/TODO \
-  doc/README \
+  doc/*.txt \
+  debian/changelog
   $COLLECTDIR/
 
 cd $COLLECTDIR/..
