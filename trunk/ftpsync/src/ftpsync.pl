@@ -636,7 +636,7 @@ sub dosync()
         if ($doverbose)  { print $infotext; }
         elsif (! $doquiet) { print "n"; }
       }
-      elsif ($remotefiledates{$curremotefile} > $localfiledates{$curremotefile}) {
+      elsif ($notimestampcheck == 0 && $remotefiledates{$curremotefile} > $localfiledates{$curremotefile}) {
         $dorefresh=1;
         $infotext="Newer: ".$curremotefile." (".$remotefilesizes{$curremotefile}." bytes, ".$remotefiledates{$curremotefile}." versus ".$localfiledates{$curremotefile}.")\n";
         if ($doinfoonly) { print $infotext; next; }
@@ -734,7 +734,7 @@ sub parseRemoteURL() {
 
 sub print_syntax() {
   print "\n";
-  print "FTPSync.pl 1.3.04 (2011-06-15)\n";
+  print "FTPSync.pl 1.3.06 (2012-03-05)\n";
   print "\n";
   print " ftpsync [ options ] [ localdir remoteURL ]\n";
   print " ftpsync [ options ] [ remoteURL localdir ]\n";
