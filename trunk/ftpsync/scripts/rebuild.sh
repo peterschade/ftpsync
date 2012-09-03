@@ -5,8 +5,8 @@
 # rebuilds target/ftpsync-1.x.tar.bz2
 #
 
-PROJECTDIR=$(cd $(dirname $0)/.. ; pwd)
-cd $PROJECTDIR
+MYDIR=$( dirname $( readlink -f $( which $0 ) ) )
+cd $MYDIR/..
 
 rm -rf target/ftpsync*
 mkdir -pv target
@@ -19,7 +19,7 @@ mkdir -pv $COLLECTDIR
 cp -avu \
   src/ftpsync.pl \
   doc/*.txt \
-  debian/changelog
+  debian/changelog \
   $COLLECTDIR/
 
 cd $COLLECTDIR/..

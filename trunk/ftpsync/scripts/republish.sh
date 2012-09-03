@@ -6,8 +6,8 @@
 # as ftpsync-1.x.tar.bz2 and ftpsync-latest.tar.bz2
 #
 
-PROJECTDIR=$(cd $(dirname $0)/.. ; pwd)
-cd $PROJECTDIR
+MYDIR=$( dirname $( readlink -f $( which $0 ) ) )
+cd $MYDIR/..
 
 scripts/rebuild.sh || exit 1
 
