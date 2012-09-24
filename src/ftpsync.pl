@@ -309,8 +309,15 @@ sub connection() {
   if ($dodebug) { print "Changing to remote directory $ftpdir.\n" }
   $ftpc->binary()
       or die "Cannot set binary mode ", $ftpc->message;
-  $ftpc->cwd($ftpdir)
-      or die "Cannot cwd to $ftpdir ", $ftpc->message;
+  # If the destination path does not exist => create it
+  if(not $ftpc->cwd($ftpdir)) {
+      my $subpath = "";
+      for my $pathpart (split(m:/:, $ftpdir)) {
+	  $subpath .= "/".$pathpart;
+	  $ftpc->cwd($pathpart) or $ftpc->mkdir($pathpart) or die "Cannot mkdir $subpath ", $ftpc->message;
+	  $ftpc->cwd($pathpart) or die "Cannot cwd $subpath ", $ftpc->message;
+      }
+  }
   if ($ftpc->pwd() ne $ftpdir) { die "Could not change to remote base directory $ftpdir\n"; }
   if ($dodebug) { print "Remote directory is now ".$ftpc->pwd()."\n"; }
 }
@@ -569,6 +576,8 @@ sub dosync()
       }
       if (! $dorefresh) { next; }
       if ($dodebug) { print "Really PUTting file ".$curlocalfile."\n"; }
+      # Some servers crash if commands are given too fast, so wait a little.
+      select(undef, undef, undef, 100/1000);
       if ($ftpc->put($curlocalfile, $curlocalfile) ne $curlocalfile)
       { print STDERR "Could not put localfile $curlocalfile\n"; }
       my $retries = 3;
