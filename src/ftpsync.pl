@@ -314,8 +314,8 @@ sub connection() {
       my $subpath = "";
       for my $pathpart (split(m:/:, $ftpdir)) {
 	  $subpath .= "/".$pathpart;
-	  $ftpc->cwd($pathpart) or $ftpc->mkdir($pathpart) or die "Cannot mkdir $subpath ", $ftpc->message;
-	  $ftpc->cwd($pathpart) or die "Cannot cwd $subpath ", $ftpc->message;
+	  $ftpc->cwd($subpath) or $ftpc->mkdir($pathpart) or die "Cannot mkdir $subpath ", $ftpc->message;
+	  $ftpc->cwd($subpath) or die "Cannot cwd $subpath ", $ftpc->message;
       }
   }
   if ($ftpc->pwd() ne $ftpdir) { die "Could not change to remote base directory $ftpdir\n"; }
